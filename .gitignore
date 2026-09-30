@@ -1,0 +1,22 @@
+# Secrets — never commit
+.env
+*.p8
+*.p12
+
+# macOS
+.DS_Store
+
+# SwiftPM
+.build/
+.swiftpm/
+Package.resolved
+
+# Xcode
+DerivedData/
+xcuserdata/
+
+# Local scratch
+*.local.bak
+
+# AI agent workspace (worktrees, plans, settings)
+.claude/

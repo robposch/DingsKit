@@ -1,0 +1,889 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Loading…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lädt…"
+          }
+        }
+      }
+    },
+    "Couldn’t load": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laden fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "Retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Last refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Aktualisierung"
+          }
+        }
+      }
+    },
+    "Good": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gut"
+          }
+        }
+      }
+    },
+    "Fair": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mäßig"
+          }
+        }
+      }
+    },
+    "Poor": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schlecht"
+          }
+        }
+      }
+    },
+    "Measured": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemessen"
+          }
+        }
+      }
+    },
+    "Synced": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisiert"
+          }
+        }
+      }
+    },
+    "now": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "jetzt"
+          }
+        }
+      }
+    },
+    "%lldm": {
+      "extractionState": "manual",
+      "comment": "Short age in minutes, e.g. \"3m\".",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Min"
+          }
+        }
+      }
+    },
+    "%lldh": {
+      "extractionState": "manual",
+      "comment": "Short age in hours, e.g. \"2h\".",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Std"
+          }
+        }
+      }
+    },
+    "%lldd": {
+      "extractionState": "manual",
+      "comment": "Short age in days, e.g. \"4d\".",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld T"
+          }
+        }
+      }
+    },
+    "Missing credentials: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlende Zugangsdaten: %@"
+          }
+        }
+      }
+    },
+    "Network error: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerkfehler: %@"
+          }
+        }
+      }
+    },
+    "Storage error: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicherfehler: %@"
+          }
+        }
+      }
+    },
+    "%@: no saved credentials.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: keine gespeicherten Zugangsdaten."
+          }
+        }
+      }
+    },
+    "%@ rejected the credentials: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat die Zugangsdaten abgelehnt: %@"
+          }
+        }
+      }
+    },
+    "%@ network error: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netzwerkfehler bei %@: %@"
+          }
+        }
+      }
+    },
+    "Could not parse the %@ response: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Antwort von %@ konnte nicht verarbeitet werden: %@"
+          }
+        }
+      }
+    },
+    "%@ returned HTTP %lld. Try again later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat HTTP %lld zurückgegeben. Versuch es später erneut."
+          }
+        }
+      }
+    },
+    "%@ storage error: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicherfehler bei %@: %@"
+          }
+        }
+      }
+    },
+    "How your data works": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So funktionieren deine Daten"
+          }
+        }
+      }
+    },
+    "A few things worth knowing before your first widget.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein paar Dinge, die du vor deinem ersten Widget wissen solltest."
+          }
+        }
+      }
+    },
+    "Everything stays on your device": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bleibt auf deinem Gerät"
+          }
+        }
+      }
+    },
+    "The app talks to %@ directly, using your own credentials. Nothing passes through a server we control.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die App spricht direkt mit %@, mit deinen eigenen Zugangsdaten. Nichts läuft über einen Server, den wir kontrollieren."
+          }
+        }
+      }
+    },
+    "iOS decides when to refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS entscheidet, wann aktualisiert wird"
+          }
+        }
+      }
+    },
+    "There is no server pushing updates, so iOS wakes the app only a few times a day. That is why a widget can show an older reading, and every widget has a refresh button you can tap.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es gibt keinen Server, der Updates pusht, daher weckt iOS die App nur ein paar Mal am Tag auf. Deshalb kann ein Widget einen älteren Messwert zeigen, und jedes Widget hat eine Aktualisieren-Schaltfläche zum Antippen."
+          }
+        }
+      }
+    },
+    "Two times, two meanings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwei Zeitangaben, zwei Bedeutungen"
+          }
+        }
+      }
+    },
+    "\"Measured\" is when the sensor took the reading, and \"Synced\" is when the app last fetched it. They differ on purpose.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Gemessen“ ist der Zeitpunkt, zu dem der Sensor den Wert erfasst hat, „Synchronisiert“ ist der Zeitpunkt, zu dem die App ihn zuletzt abgerufen hat. Beide können sich absichtlich unterscheiden."
+          }
+        }
+      }
+    },
+    "No refreshes recorded yet.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Aktualisierungen aufgezeichnet."
+          }
+        }
+      }
+    },
+    "Which path last fetched data. “Background” runs while the app is closed or the device is locked. iOS throttles these to a few times a day.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt, auf welchem Weg zuletzt Daten abgerufen wurden. „Hintergrund“ läuft bei geschlossener App oder gesperrtem Gerät. iOS lässt das nur ein paar Mal am Tag zu."
+          }
+        }
+      }
+    },
+    "Clear log": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokoll löschen"
+          }
+        }
+      }
+    },
+    "Background": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hintergrund"
+          }
+        }
+      }
+    },
+    "Widget": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widget"
+          }
+        }
+      }
+    },
+    "App open": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App geöffnet"
+          }
+        }
+      }
+    },
+    "Refresh activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisierungsverlauf"
+          }
+        }
+      }
+    },
+    "Cache error: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cache-Fehler: %@"
+          }
+        }
+      }
+    },
+    "The request timed out.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anfrage hat zu lange gedauert."
+          }
+        }
+      }
+    },
+    "No internet connection.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Internetverbindung."
+          }
+        }
+      }
+    },
+    "The connection was lost.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verbindung wurde unterbrochen."
+          }
+        }
+      }
+    },
+    "Couldn’t reach the server.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server nicht erreichbar."
+          }
+        }
+      }
+    },
+    "Non-HTTP response": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine HTTP-Antwort"
+          }
+        }
+      }
+    },
+    "Invalid URL: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ungültige URL: %@"
+          }
+        }
+      }
+    },
+    "No saved credentials.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine gespeicherten Zugangsdaten."
+          }
+        }
+      }
+    },
+    "All providers failed.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Dienste sind fehlgeschlagen."
+          }
+        }
+      }
+    },
+    "Could not encode readings snapshot.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Messwerte konnten nicht gespeichert werden."
+          }
+        }
+      }
+    },
+    "No credential store configured.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Speicher für Zugangsdaten eingerichtet."
+          }
+        }
+      }
+    },
+    "Keychain read failed (OSStatus %@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesen aus dem Schlüsselbund fehlgeschlagen (OSStatus %@)"
+          }
+        }
+      }
+    },
+    "Could not decode stored credentials.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die gespeicherten Zugangsdaten konnten nicht gelesen werden."
+          }
+        }
+      }
+    },
+    "Could not encode credentials.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Zugangsdaten konnten nicht gespeichert werden."
+          }
+        }
+      }
+    },
+    "Keychain write failed (OSStatus %@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreiben in den Schlüsselbund fehlgeschlagen (OSStatus %@)"
+          }
+        }
+      }
+    },
+    "Keychain delete failed (OSStatus %@)": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen aus dem Schlüsselbund fehlgeschlagen (OSStatus %@)"
+          }
+        }
+      }
+    },
+    "Unexpected error: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unerwarteter Fehler: %@"
+          }
+        }
+      }
+    },
+    "Paste your credentials": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsdaten einfügen"
+          }
+        }
+      }
+    },
+    "First time? Follow the steps below to create them.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum ersten Mal hier? Folge den Schritten unten, um sie zu erstellen."
+          }
+        }
+      }
+    },
+    "Get your credentials": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugangsdaten anfordern"
+          }
+        }
+      }
+    },
+    "Opens in Safari so you can switch back here to paste.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet sich in Safari, damit du zum Einfügen hierher zurückwechseln kannst."
+          }
+        }
+      }
+    },
+    "reads your devices using your own free %@ API credentials. You create them once in your %@ account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "liest deine Geräte über deine eigenen kostenlosen %@-API-Zugangsdaten. Du erstellst sie einmalig in deinem %@-Konto."
+          }
+        }
+      }
+    },
+    "Refresh readings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messwerte aktualisieren"
+          }
+        }
+      }
+    },
+    "Fetch the latest readings now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt die neuesten Messwerte abrufen."
+          }
+        }
+      }
+    },
+    "Report a problem": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem melden"
+          }
+        }
+      }
+    },
+    "Version": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "About": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über"
+          }
+        }
+      }
+    },
+    "Before you connect": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevor du dich verbindest"
+          }
+        }
+      }
+    },
+    "About this app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über diese App"
+          }
+        }
+      }
+    },
+    "Connecting…": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinde…"
+          }
+        }
+      }
+    },
+    "Save & Connect": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern & verbinden"
+          }
+        }
+      }
+    },
+    "Steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schritte"
+          }
+        }
+      }
+    },
+    "Once it's connected, tell us at %@ whether the readings look right.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sobald es verbunden ist: schreib uns an %@, ob die Messwerte stimmen."
+          }
+        }
+      }
+    },
+    "Hide %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ verbergen"
+          }
+        }
+      }
+    },
+    "Show %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ anzeigen"
+          }
+        }
+      }
+    },
+    "Couldn’t refresh. Showing older data": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisierung fehlgeschlagen – ältere Daten werden angezeigt"
+          }
+        }
+      }
+    },
+    "Available": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfügbar"
+          }
+        }
+      }
+    },
+    "Denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verweigert"
+          }
+        }
+      }
+    },
+    "Restricted": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingeschränkt"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbekannt"
+          }
+        }
+      }
+    },
+    "Nothing connected yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts verbunden"
+          }
+        }
+      }
+    },
+    "Succeeded": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfolgreich"
+          }
+        }
+      }
+    },
+    "Failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlgeschlagen"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

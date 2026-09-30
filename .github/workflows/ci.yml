@@ -1,0 +1,26 @@
+name: CI
+on:
+  push: {branches: [main]}
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app || sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)"
+      - name: Build and test
+        run: swift test
+      - name: Build for iOS
+        # `swift test` runs on macOS, where the UIKit-only views (setup form,
+        # About, refresh log, diagnostics) compile out. Build them here.
+        run: |
+          xcodebuild build -scheme DingsKit-Package \
+            -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO
+      - name: SwiftLint
+        # Non-strict: warnings are reported but do not fail the build.
+        run: |
+          brew install swiftlint
+          swiftlint --quiet

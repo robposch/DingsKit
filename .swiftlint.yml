@@ -1,0 +1,78 @@
+# SwiftLint for DingsKit.
+#
+# Bias: catch defects, not style. Rules here are chosen because they can surface
+# a real bug or enforce a rule the project already states.
+
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - DerivedData
+  - build
+
+opt_in_rules:
+  # Correctness / crash-safety
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - unhandled_throwing_task
+  - discarded_notification_center_observer
+  - unused_optional_binding
+  - empty_count
+  - prefer_zero_over_explicit_init
+
+  # Concurrency / SwiftUI correctness
+  - private_swiftui_state
+
+  # Accessibility
+  - accessibility_label_for_image
+
+  # Clarity that prevents mistakes rather than pleasing a formatter
+  - first_where
+  - last_where
+  - contains_over_first_not_nil
+  - redundant_nil_coalescing
+  - toggle_bool
+  - closure_spacing
+
+analyzer_rules:
+  - unused_import
+  - unused_declaration
+
+disabled_rules:
+  - trailing_whitespace
+  - todo
+  - line_length
+  - trailing_comma
+  - statement_position
+  - opening_brace
+
+identifier_name:
+  min_length: 1
+  allowed_symbols: ["_"]
+
+type_name:
+  min_length: 3
+
+file_length:
+  warning: 500
+  error: 900
+
+type_body_length:
+  warning: 350
+  error: 600
+
+function_body_length:
+  warning: 80
+  error: 150
+
+cyclomatic_complexity:
+  ignores_case_statements: true
+  warning: 12
+  error: 20
+
+nesting:
+  type_level: 2
+
+reporter: "xcode"
