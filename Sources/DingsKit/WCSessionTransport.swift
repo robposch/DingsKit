@@ -9,11 +9,20 @@ import WatchConnectivity
 /// current, outside the keychain, and this payload carries API secrets. A
 /// user-info transfer is dropped once delivered. The watch can also pull with
 /// a live message, which wakes the iPhone app in the background.
+///
+/// A session activates asynchronously and reports the counterpart reachable a
+/// moment after that, so `request()` waits for both, up to
+/// `requestReadinessTimeout`, rather than give up on a request made at launch.
 public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDelegate, @unchecked Sendable {
     private static let requestKey = "dingsWatchSyncRequest"
+    /// How long `request()` waits for the session to be activated and the
+    /// counterpart reachable before it gives up.
+    static let requestReadinessTimeout: Duration = .seconds(5)
 
     private let session: WCSession
     private let lock = NSLock()
+    /// Requests waiting for the session; the delegate callbacks signal it.
+    private let readiness = ReadinessGate()
     private var onActivated: (@Sendable () -> Void)?
     private var onReceive: (@Sendable (WatchSyncPayload) -> Void)?
     private var onRequest: (@Sendable () -> WatchSyncPayload?)?
@@ -52,7 +61,11 @@ public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDe
     }
 
     public func request() async -> WatchSyncPayload? {
-        guard session.activationState == .activated, session.isReachable else { return nil }
+        let ready = await readiness.wait(timeout: Self.requestReadinessTimeout) { [weak self] in
+            self?.requestReadiness ?? .unavailable
+        }
+        guard ready else { return nil }
+        // Exactly one of the two handlers is called, once.
         return await withCheckedContinuation { continuation in
             session.sendMessage(
                 [Self.requestKey: true],
@@ -63,6 +76,17 @@ public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDe
                     continuation.resume(returning: nil)
                 })
         }
+    }
+
+    /// Whether a live message can go out now, might soon, or never will.
+    private var requestReadiness: ReadinessGate.State {
+        guard session.activationState == .activated else { return .waiting }
+        #if os(iOS)
+        guard session.isPaired, session.isWatchAppInstalled else { return .unavailable }
+        #else
+        guard session.isCompanionAppInstalled else { return .unavailable }
+        #endif
+        return session.isReachable ? .ready : .waiting
     }
 
     public func setHandlers(
@@ -87,8 +111,23 @@ public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDe
         if let error {
             Log.credentials.error("watch sync: activation failed: \(error)")
         }
+        readiness.signal()
         guard activationState == .activated else { return }
         lock.withLock { onActivated }?()
+    }
+
+    public func sessionReachabilityDidChange(_ session: WCSession) {
+        readiness.signal()
+    }
+
+    public func session(
+        _ session: WCSession,
+        didFinish userInfoTransfer: WCSessionUserInfoTransfer,
+        error: (any Error)?
+    ) {
+        // Only the error: the transfer holds credentials.
+        guard let error else { return }
+        Log.credentials.error("watch sync: transfer failed: \(error)")
     }
 
     public func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
@@ -110,6 +149,12 @@ public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDe
         }
         replyHandler(reply)
     }
+
+    #if os(watchOS)
+    public func sessionCompanionAppInstalledDidChange(_ session: WCSession) {
+        readiness.signal()
+    }
+    #endif
 
     #if os(iOS)
     public func sessionDidBecomeInactive(_ session: WCSession) {}

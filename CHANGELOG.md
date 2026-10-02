@@ -16,7 +16,9 @@ values changed.
   applies what arrives and reports real changes only.
 - `WCSessionTransport`: the WatchConnectivity implementation (iOS and
   watchOS). Credentials travel as a user-info transfer, never as application
-  context.
+  context. `request()` waits up to five seconds for the session to activate
+  and the counterpart to become reachable, so a request made at launch is not
+  lost; a failed transfer is logged.
 - `ConnectionsStore.providers`: every provider the store covers, configured or
   not.
 - `DataMode` is `Codable`.
