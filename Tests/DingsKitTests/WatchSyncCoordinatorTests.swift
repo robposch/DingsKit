@@ -81,7 +81,7 @@ extension GlobalConfig {
             #expect(transport.sent.isEmpty)
         }
 
-        /// Review Focus 1.
+        /// With no payload to build (keychain unreadable), nothing is sent.
         @Test func senderSkipsWhenPayloadCannotBeBuilt() {
             let transport = FakeWatchSyncTransport()
             let sender = WatchSyncSender(transport: transport, makePayload: { throw Boom() })
@@ -173,7 +173,7 @@ extension GlobalConfig {
             withExtendedLifetime(receiver) {}
         }
 
-        /// Review Focus 4.
+        /// A delivery that changes nothing must not trigger a refresh.
         @Test func receiverStaysQuietWhenNothingChanged() {
             let transport = FakeWatchSyncTransport()
             let notified = Box(0)
@@ -229,7 +229,7 @@ extension GlobalConfig {
             #expect(await receiver.requestFromPhone() == false)
         }
 
-        /// Review Focus 4 under concurrency: the same payload delivered from
+        /// Under concurrency: the same payload delivered from
         /// the session queue and a request at once refreshes only once.
         @Test func concurrentDuplicateDeliveriesNotifyOnce() async {
             let transport = FakeWatchSyncTransport()

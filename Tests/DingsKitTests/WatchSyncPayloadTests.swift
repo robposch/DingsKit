@@ -74,7 +74,7 @@ extension GlobalConfig {
             #expect(payload.dataMode == .demo)
         }
 
-        /// Review Focus 1: an unreadable keychain must not look like "nothing
+        /// An unreadable keychain must not look like "nothing
         /// connected", or the watch would be wiped.
         @Test func snapshotThrowsWhenAStoreIsUnreadable() {
             let connections = ConnectionsStore(stores: [alpha: UnreadableStore()], order: [alpha])
@@ -100,7 +100,7 @@ extension GlobalConfig {
             #expect(mode.load() == .demo)
         }
 
-        /// Review Focus 3.
+        /// A provider missing from the payload was disconnected on the phone.
         @Test func applyClearsProvidersAbsentFromPayloadAndReportsThem() throws {
             let connections = makeConnections()
             try connections.saveCredentials(alphaCreds, for: alpha)
@@ -115,7 +115,7 @@ extension GlobalConfig {
             #expect(try connections.loadCredentials(beta) == nil)
         }
 
-        /// Review Focus 2.
+        /// A payload from a newer build can name providers this build lacks.
         @Test func applyIgnoresProvidersTheStoreDoesNotKnow() throws {
             let connections = makeConnections()
             let payload = WatchSyncPayload(
@@ -127,7 +127,7 @@ extension GlobalConfig {
             #expect(connections.configuredProviders().isEmpty)
         }
 
-        /// Review Focus 2.
+        /// A different wire format is rejected before anything is written.
         @Test func applyRejectsUnknownVersionWithoutTouchingStores() throws {
             let connections = makeConnections()
             try connections.saveCredentials(alphaCreds, for: alpha)
@@ -141,7 +141,7 @@ extension GlobalConfig {
             #expect(try connections.loadCredentials(alpha) == alphaCreds)
         }
 
-        /// Review Focus 4.
+        /// A duplicate delivery must not write to the keychain again.
         @Test func applyingTheSamePayloadTwiceReportsNoChange() throws {
             let alphaStore = CountingStore()
             let betaStore = CountingStore()
