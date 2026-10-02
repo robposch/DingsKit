@@ -231,6 +231,16 @@ process, so suites that replace it must not run in parallel: in this package
 they are nested in the serialized `GlobalConfig` suite
 (`Tests/DingsKitTests/GlobalConfigSuite.swift`); do the same in an app's tests.
 
+**Watch sync.** `WatchSyncPayload` (credentials per provider, unit system, data
+mode) is built on the iPhone with `snapshot` and applied on the Watch with
+`apply`. `WatchSyncSender` (phone) and `WatchSyncReceiver` (watch) sit on the
+`WatchSyncTransport` seam; `WCSessionTransport` is the real transport and
+`FakeWatchSyncTransport` the test double. Create the sender or receiver first,
+then call `transport.activate()`. `makePayload`, `apply` and a transport's
+`send`/`isCounterpartAvailable` must not call back into the sender or receiver.
+The payload's field names, `userInfoKey` and `currentVersion` are wire format
+between two separately updated apps.
+
 ## Hard constraints
 
 - **Client-side only. No backend, ever.** Credentials and API traffic never

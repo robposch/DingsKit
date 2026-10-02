@@ -32,7 +32,9 @@ expect it to be opinionated about that shape of app.
 iOS 17, macOS 14, watchOS 10, visionOS 1. Swift 6. Building the package itself
 needs Xcode (the Command Line Tools alone lack `xcstringstool`).
 
-iOS is the platform the kit is built for and the only one the apps ship on.
+iOS is the platform the kit is built for. watchOS is supported for a companion
+Watch app that fetches on its own: `WatchSyncPayload` and `WCSessionTransport`
+carry the user's credentials from the iPhone to the Watch.
 The core builds everywhere. In `DingsKitUI`, the setup form, the About and
 disclaimer views, the refresh log and the background diagnostics are UIKit-only
 (iOS and visionOS); macOS and watchOS get the rest. `RefreshReadingsIntent` and

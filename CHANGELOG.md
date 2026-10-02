@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.3.0 - Apple Watch sync
+
+The plumbing an Apple Watch app needs to fetch readings on its own. No raw
+values changed.
+
+### DingsKit
+
+- `WatchSyncPayload`: a versioned snapshot of the user's credentials, unit
+  system and data mode. `snapshot` builds it from the phone's stores and fails
+  rather than send an empty payload when the keychain is unreadable; `apply`
+  makes the watch's stores match it and reports which providers were removed.
+- `WatchSyncTransport`, `WatchSyncSender`, `WatchSyncReceiver`: the phone
+  sends when its state changed and answers the watch's requests; the watch
+  applies what arrives and reports real changes only.
+- `WCSessionTransport`: the WatchConnectivity implementation (iOS and
+  watchOS). Credentials travel as a user-info transfer, never as application
+  context.
+- `ConnectionsStore.providers`: every provider the store covers, configured or
+  not.
+- `DataMode` is `Codable`.
+
+### DingsKitTestSupport
+
+- `FakeWatchSyncTransport`.
+
 ## 0.2.0 - shared onboarding, readings, and widget layer
 
 Everything LuftDings and ZuckerDings turned out to share beyond the refresh

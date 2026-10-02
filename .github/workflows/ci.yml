@@ -19,6 +19,13 @@ jobs:
         run: |
           xcodebuild build -scheme DingsKit-Package \
             -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO
+      - name: Build for watchOS
+        # The watch sync transport and everything the watch targets link only
+        # compile here; `swift test` runs on macOS, where WatchConnectivity
+        # does not exist.
+        run: |
+          xcodebuild build -scheme DingsKit-Package \
+            -destination 'generic/platform=watchOS' CODE_SIGNING_ALLOWED=NO
       - name: SwiftLint
         # Non-strict: warnings are reported but do not fail the build.
         run: |
