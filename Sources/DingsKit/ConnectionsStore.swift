@@ -25,6 +25,12 @@ public struct ConnectionsStore: Sendable {
     }
     #endif
 
+    /// Every provider this store can hold credentials for, in display order,
+    /// whether or not one is saved. `configuredProviders()` hides read errors;
+    /// callers that must tell "nothing saved" from "could not read" walk this
+    /// list and call `loadCredentials(_:)` themselves.
+    public var providers: [Provider] { order }
+
     /// Providers with saved credentials, in `order`. A keychain read error
     /// counts as "not configured" - refresh and routing must not crash over a
     /// transiently unreadable item.

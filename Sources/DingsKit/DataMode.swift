@@ -1,7 +1,7 @@
 import Foundation
 
 /// Whether the app shows live provider data or built-in demo data.
-public enum DataMode: String, Sendable, Equatable {
+public enum DataMode: String, Sendable, Equatable, Codable {
     case live
     case demo
 }
