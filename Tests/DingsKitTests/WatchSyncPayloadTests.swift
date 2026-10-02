@@ -13,6 +13,23 @@ private struct UnreadableStore: ProviderCredentialStore {
     func clear() throws {}
 }
 
+/// Counts writes so a test can tell "no second write" from "wrote the same
+/// value again". Single-threaded test use, like `InMemoryProviderCredentialStore`.
+private final class CountingStore: ProviderCredentialStore, @unchecked Sendable {
+    private var stored: ProviderCredentials?
+    private(set) var saves = 0
+    private(set) var clears = 0
+    func load() throws -> ProviderCredentials? { stored }
+    func save(_ credentials: ProviderCredentials) throws {
+        saves += 1
+        stored = credentials
+    }
+    func clear() throws {
+        clears += 1
+        stored = nil
+    }
+}
+
 private func makeConnections() -> ConnectionsStore {
     ConnectionsStore(
         stores: [alpha: InMemoryProviderCredentialStore(), beta: InMemoryProviderCredentialStore()],
@@ -126,7 +143,10 @@ extension GlobalConfig {
 
         /// Review Focus 4.
         @Test func applyingTheSamePayloadTwiceReportsNoChange() throws {
-            let connections = makeConnections()
+            let alphaStore = CountingStore()
+            let betaStore = CountingStore()
+            let connections = ConnectionsStore(
+                stores: [alpha: alphaStore, beta: betaStore], order: [alpha, beta])
             let units = UnitPreferenceStore(defaults: InMemoryUserDefaults())
             let mode = DataModeStore(defaults: InMemoryUserDefaults())
             let payload = WatchSyncPayload(
@@ -136,6 +156,10 @@ extension GlobalConfig {
             let second = try payload.apply(to: connections, units: units, dataMode: mode)
 
             #expect(second == WatchSyncPayload.Applied(changed: false, removed: []))
+            #expect(alphaStore.saves == 1)
+            #expect(alphaStore.clears == 0)
+            #expect(betaStore.saves == 0)
+            #expect(betaStore.clears == 0)
         }
     }
 }
