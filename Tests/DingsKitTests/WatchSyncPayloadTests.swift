@@ -13,6 +13,13 @@ private struct UnreadableStore: ProviderCredentialStore {
     func clear() throws {}
 }
 
+private struct UnwritableStore: ProviderCredentialStore {
+    struct WriteFailure: Error {}
+    func load() throws -> ProviderCredentials? { nil }
+    func save(_ credentials: ProviderCredentials) throws { throw WriteFailure() }
+    func clear() throws {}
+}
+
 /// Counts writes so a test can tell "no second write" from "wrote the same
 /// value again". Single-threaded test use, like `InMemoryProviderCredentialStore`.
 private final class CountingStore: ProviderCredentialStore, @unchecked Sendable {
@@ -113,6 +120,39 @@ extension GlobalConfig {
             #expect(applied == WatchSyncPayload.Applied(changed: true, removed: [beta]))
             #expect(try connections.loadCredentials(alpha) == alphaCreds)
             #expect(try connections.loadCredentials(beta) == nil)
+        }
+
+        /// One provider's keychain failing must not stop the others: the
+        /// failure repeats on every retry, so providers after it would never
+        /// be set up on the watch.
+        @Test func applyContinuesPastAProviderThatFailsAndReportsIt() throws {
+            let betaStore = InMemoryProviderCredentialStore()
+            let connections = ConnectionsStore(
+                stores: [alpha: UnwritableStore(), beta: betaStore], order: [alpha, beta])
+            let units = UnitPreferenceStore(defaults: InMemoryUserDefaults())
+            let payload = WatchSyncPayload(
+                credentials: [alpha.rawValue: alphaCreds, beta.rawValue: betaCreds],
+                unitSystem: .imperial, dataMode: .live)
+
+            let applied = try payload.apply(to: connections, units: units, dataMode: nil)
+
+            #expect(applied == WatchSyncPayload.Applied(changed: true, removed: [], failed: [alpha]))
+            #expect(try betaStore.load() == betaCreds)
+            #expect(units.load() == .imperial)
+        }
+
+        @Test func applyReportsAnUnreadableProviderAndAppliesTheRest() throws {
+            let betaStore = InMemoryProviderCredentialStore()
+            let connections = ConnectionsStore(
+                stores: [alpha: UnreadableStore(), beta: betaStore], order: [alpha, beta])
+            let payload = WatchSyncPayload(
+                credentials: [alpha.rawValue: alphaCreds, beta.rawValue: betaCreds],
+                unitSystem: .metric, dataMode: .live)
+
+            let applied = try payload.apply(to: connections, units: nil, dataMode: nil)
+
+            #expect(applied == WatchSyncPayload.Applied(changed: true, removed: [], failed: [alpha]))
+            #expect(try betaStore.load() == betaCreds)
         }
 
         /// A payload from a newer build can name providers this build lacks.

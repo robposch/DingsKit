@@ -36,12 +36,16 @@ public struct WatchSyncPayload: Codable, Equatable, Sendable {
 
     /// What `apply` did. `removed` lists providers whose credentials were
     /// cleared, so the caller can drop their devices from its readings cache.
+    /// `failed` lists providers whose local store could not be read or
+    /// written; they keep whatever they had, and the next delivery retries.
     public struct Applied: Equatable, Sendable {
         public var changed: Bool
         public var removed: [Provider]
-        public init(changed: Bool, removed: [Provider]) {
+        public var failed: [Provider]
+        public init(changed: Bool, removed: [Provider], failed: [Provider] = []) {
             self.changed = changed
             self.removed = removed
+            self.failed = failed
         }
     }
 
@@ -67,8 +71,12 @@ public struct WatchSyncPayload: Codable, Equatable, Sendable {
 
     /// Makes the local stores match this payload. Idempotent: a store that
     /// already holds the incoming value is not written again. Providers the
-    /// local `connections` does not know are ignored. A failed write throws
-    /// midway; applying the same payload again finishes the job.
+    /// local `connections` does not know are ignored.
+    ///
+    /// A provider whose store fails is skipped and reported in `failed`; the
+    /// rest are still applied. Stopping at the first failure would repeat on
+    /// every retry, so the providers after it would never arrive. Throws only
+    /// for a wire format this build does not understand.
     @discardableResult
     public func apply(
         to connections: ConnectionsStore,
@@ -80,17 +88,24 @@ public struct WatchSyncPayload: Codable, Equatable, Sendable {
         }
         var changed = false
         var removed: [Provider] = []
+        var failed: [Provider] = []
         for provider in connections.providers {
-            let existing = try connections.loadCredentials(provider)
-            if let incoming = credentials[provider.rawValue] {
-                if existing != incoming {
-                    try connections.saveCredentials(incoming, for: provider)
+            do {
+                let existing = try connections.loadCredentials(provider)
+                if let incoming = credentials[provider.rawValue] {
+                    if existing != incoming {
+                        try connections.saveCredentials(incoming, for: provider)
+                        changed = true
+                    }
+                } else if existing != nil {
+                    try connections.clear(provider)
+                    removed.append(provider)
                     changed = true
                 }
-            } else if existing != nil {
-                try connections.clear(provider)
-                removed.append(provider)
-                changed = true
+            } catch {
+                // Only the error: the payload holds credentials.
+                Log.credentials.error("watch sync: apply failed for \(provider.rawValue): \(error)")
+                failed.append(provider)
             }
         }
         if let units, units.load() != unitSystem {
@@ -101,7 +116,7 @@ public struct WatchSyncPayload: Codable, Equatable, Sendable {
             dataMode.save(self.dataMode)
             changed = true
         }
-        return Applied(changed: changed, removed: removed)
+        return Applied(changed: changed, removed: removed, failed: failed)
     }
 
     /// The property-list dictionary WatchConnectivity carries.

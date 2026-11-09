@@ -11,6 +11,8 @@ values changed.
   system and data mode. `snapshot` builds it from the phone's stores and fails
   rather than send an empty payload when the keychain is unreadable; `apply`
   makes the watch's stores match it and reports which providers were removed.
+  A provider whose store fails is skipped and reported in `failed`, so it
+  cannot hold back the providers after it.
 - `WatchSyncTransport`, `WatchSyncSender`, `WatchSyncReceiver`: the phone
   sends when its state changed and answers the watch's requests; the watch
   applies what arrives and reports real changes only.
