@@ -23,6 +23,11 @@ values changed.
   not.
 - `DataMode` is `Codable`.
 
+### DingsKitUI
+
+- `RefreshErrorBanner(message:title:)`: an optional headline replaces
+  "Couldn’t refresh. Showing older data" where no older data is on screen.
+
 ### DingsKitTestSupport
 
 - `FakeWatchSyncTransport`.

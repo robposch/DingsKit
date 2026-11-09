@@ -8,9 +8,13 @@ import DingsKit
 /// — the layout below is easy to get subtly wrong and hard to spot by eye.
 public struct RefreshErrorBanner: View {
     let message: String
+    let title: String?
 
-    public init(message: String) {
+    /// - Parameter title: Replaces the default headline, for a failure that
+    ///   did not leave older data on screen (e.g. one provider of several).
+    public init(message: String, title: String? = nil) {
         self.message = message
+        self.title = title
     }
 
     public var body: some View {
@@ -26,7 +30,7 @@ public struct RefreshErrorBanner: View {
                 .foregroundStyle(.orange)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(coreLocalized("Couldn’t refresh. Showing older data"))
+                Text(title ?? coreLocalized("Couldn’t refresh. Showing older data"))
                     .font(.callout).foregroundStyle(.orange)
                 Text(message)
                     .font(.caption).foregroundStyle(.secondary)
