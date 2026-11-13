@@ -53,11 +53,16 @@ public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDe
     public func send(_ payload: WatchSyncPayload) throws {
         let userInfo = try payload.userInfo()
         // Only the newest state matters: drop anything still queued.
+        cancelQueuedPayloads()
+        session.transferUserInfo(userInfo)
+    }
+
+    /// Queued transfers sit on disk until delivered, outside the keychain.
+    private func cancelQueuedPayloads() {
         for transfer in session.outstandingUserInfoTransfers
         where transfer.userInfo[WatchSyncPayload.userInfoKey] != nil {
             transfer.cancel()
         }
-        session.transferUserInfo(userInfo)
     }
 
     public func request() async -> WatchSyncPayload? {
@@ -119,6 +124,16 @@ public final class WCSessionTransport: NSObject, WatchSyncTransport, WCSessionDe
     public func sessionReachabilityDidChange(_ session: WCSession) {
         readiness.signal()
     }
+
+    #if os(iOS)
+    /// The watch was unpaired or its app removed: a payload still queued for
+    /// it would otherwise stay on this phone's disk with the user's secrets.
+    public func sessionWatchStateDidChange(_ session: WCSession) {
+        readiness.signal()
+        guard !session.isPaired || !session.isWatchAppInstalled else { return }
+        cancelQueuedPayloads()
+    }
+    #endif
 
     public func session(
         _ session: WCSession,
