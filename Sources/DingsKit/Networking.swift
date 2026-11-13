@@ -13,18 +13,37 @@ public protocol Transport: Sendable {
 public struct URLSessionTransport: Transport {
     private let session: URLSession
 
-    public init(session: URLSession = .shared) {
+    public init(session: URLSession = URLSessionTransport.defaultSession) {
         self.session = session
     }
 
+    /// Ephemeral, with no URL cache, cookies or credential storage.
+    /// `URLSession.shared` writes every response to `Cache.db` on disk, keyed
+    /// by the full URL, and several providers put the user's API key in the
+    /// query string. A short request timeout keeps one hung provider from
+    /// using up a widget extension's few seconds.
+    public static let defaultSession: URLSession = {
+        // Builds before this change stored responses through
+        // `URLSession.shared`; drop what they left behind.
+        URLCache.shared.removeAllCachedResponses()
+        let config = URLSessionConfiguration.ephemeral
+        config.urlCache = nil
+        config.httpCookieStorage = nil
+        config.urlCredentialStorage = nil
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.timeoutIntervalForRequest = 15
+        return URLSession(configuration: config)
+    }()
+
     public func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
-        // "Current values" must come from the API, not iOS's HTTP cache (URLCache),
-        // which otherwise serves a stale 200 in ~0 ms and never decrements the rate
-        // limit. Our deliberate caching is the App-Group snapshot, not the HTTP layer.
+        // "Current values" must come from the API, not an HTTP cache, which would
+        // serve a stale 200 in ~0 ms and never decrement the rate limit. Also set
+        // per request for sessions passed in by a caller. Our deliberate caching
+        // is the App-Group snapshot, not the HTTP layer.
         var request = request
         request.cachePolicy = .reloadIgnoringLocalCacheData
         let method = request.httpMethod ?? "GET"
-        let path = request.url.map { "\($0.host ?? "")\($0.path)" } ?? "?"
+        let path = request.url.map { Log.redactedPath("\($0.host ?? "")\($0.path)") } ?? "?"
         let start = Date()
         Log.net.debug("→ \(method) \(path)")
         do {
