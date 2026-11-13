@@ -41,7 +41,17 @@ public struct HomeScreen {
     /// label, so widgets are told apart by size: an icon is about 76pt wide,
     /// the smallest widget about 150pt.
     public func placedWidgets() -> [XCUIElement] {
-        widgetElements.allElementsBoundByIndex.filter { $0.frame.width > 120 && $0.frame.height > 120 }
+        widgetElements.allElementsBoundByIndex.filter { element in
+            guard let frame = currentFrame(of: element) else { return false }
+            return frame.width > 120 && frame.height > 120
+        }
+    }
+
+    /// The element's frame, or `nil` if it is gone. Reading `frame` directly
+    /// fails the test when the element vanished meanwhile, as one does while
+    /// a removal animates; a snapshot reports it instead.
+    func currentFrame(of element: XCUIElement) -> CGRect? {
+        (try? element.snapshot())?.frame
     }
 
     /// Removes widgets an earlier, interrupted run left behind, which would
@@ -58,9 +68,7 @@ public struct HomeScreen {
     /// Presses at the widget's position rather than on the element: while a
     /// removal animates, the element can vanish between finding and pressing.
     func remove(_ widget: XCUIElement) {
-        guard widget.exists else { return }
-        let frame = widget.frame
-        guard !frame.isEmpty else { return }
+        guard let frame = currentFrame(of: widget), !frame.isEmpty else { return }
         springboard.coordinate(withNormalizedOffset: .zero)
             .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
             .press(forDuration: 1.5)
