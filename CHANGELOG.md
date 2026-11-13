@@ -72,6 +72,20 @@ values changed.
 
 - `FakeWatchSyncTransport`.
 
+### DingsKitUITesting (new)
+
+For UI test bundles only. Drives iOS the way a person does, so app UI tests
+need not repeat it:
+
+- `HomeScreen`: places an app's widget from the widget gallery, finds and
+  removes placed widgets, clears widgets an interrupted run left behind.
+- `PlacedWidget` and `WidgetEditor`: read what a widget shows, open iOS's
+  widget editor, pick a field's value, open a list field's options, check
+  what is offered, pick one.
+- `SystemPrompts.dismissSavePassword(in:)`, including the iOS 27 dialog
+  that ignores an element tap.
+- `Screenshots.attach(_:to:)`.
+
 ## 0.2.0 - shared onboarding, readings, and widget layer
 
 Everything LuftDings and ZuckerDings turned out to share beyond the refresh
