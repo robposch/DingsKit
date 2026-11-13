@@ -32,21 +32,33 @@ public struct HowDataWorksView: View {
         self.actionAccessibilityIdentifier = actionAccessibilityIdentifier
     }
 
+    /// An app that syncs keys through iCloud Keychain says so instead of
+    /// claiming everything stays on the device.
+    private var dataBullet: OnboardingBullet {
+        // Looks up the literal "%@" pattern and substitutes `serviceName`
+        // afterwards, so the catalog key is exactly the string written here.
+        if Dings.config.keychainSyncedProviders.isEmpty {
+            return OnboardingBullet(
+                symbolName: "iphone",
+                title: coreLocalized("Everything stays on your device"),
+                detail: String(
+                    format: coreLocalized("The app talks to %@ directly, using your own credentials. Nothing passes through a server we control."),
+                    serviceName))
+        }
+        return OnboardingBullet(
+            symbolName: "lock.icloud",
+            title: coreLocalized("No server in between"),
+            detail: String(
+                format: coreLocalized("The app talks to %@ directly, using your own credentials. Your keys sync between your Apple devices through iCloud Keychain, end-to-end encrypted. Nothing passes through a server we control."),
+                serviceName))
+    }
+
     public var body: some View {
         OnboardingPageView(
             title: coreLocalized("How your data works"),
             subtitle: coreLocalized("A few things worth knowing before your first widget."),
             bullets: [
-                OnboardingBullet(
-                    symbolName: "iphone",
-                    title: coreLocalized("Everything stays on your device"),
-                    // Looks up the literal "%@" pattern and substitutes
-                    // `serviceName` afterwards, so the catalog key is exactly
-                    // the string written here.
-                    detail: String(
-                        format: coreLocalized("The app talks to %@ directly, using your own credentials. Nothing passes through a server we control."),
-                        serviceName)
-                ),
+                dataBullet,
                 OnboardingBullet(
                     symbolName: "clock.arrow.circlepath",
                     title: coreLocalized("iOS decides when to refresh"),

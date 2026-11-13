@@ -883,6 +883,28 @@
           }
         }
       }
+    },
+    "No server in between": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Server dazwischen"
+          }
+        }
+      }
+    },
+    "The app talks to %@ directly, using your own credentials. Your keys sync between your Apple devices through iCloud Keychain, end-to-end encrypted. Nothing passes through a server we control.": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die App spricht direkt mit %@, mit deinen eigenen Zugangsdaten. Deine Schlüssel werden über den iCloud-Schlüsselbund Ende-zu-Ende-verschlüsselt zwischen deinen Apple-Geräten synchronisiert. Nichts läuft über einen Server, den wir kontrollieren."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
