@@ -31,6 +31,8 @@ values changed.
   removed once.
 - `Log.redactedPath(_:)`: request paths in logs keep their route but drop
   the query and shorten account, station and device identifiers.
+- `decodingSummary(_:)`: one short phrase for a failed decode ("missing
+  field ‘body’") instead of `DecodingError`'s multi-line dump.
 - `WCSessionTransport` cancels credential transfers still queued for a
   watch that was unpaired or had the app removed.
 
