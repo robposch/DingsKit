@@ -39,6 +39,7 @@ public struct ProviderSetupView: View {
     }
 
     @State private var revealedFields: Set<String> = []
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
 
@@ -122,6 +123,12 @@ public struct ProviderSetupView: View {
         .navigationTitle(spec.provider.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .task { model.load() }
+        // A revealed secret hides again when the app leaves the foreground, so
+        // it is not captured in the app-switcher snapshot (the setup flow sends
+        // people to Safari and back between fields).
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { revealedFields.removeAll() }
+        }
     }
 
     @ViewBuilder
