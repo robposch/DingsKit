@@ -22,6 +22,21 @@ public enum Log {
     public static let cache = LogCategory("cache")        // App-Group readings cache
     public static let readings = LogCategory("readings")  // app readings view-model
     public static let widget = LogCategory("widget")      // widget timeline provider
+
+    /// A request path for a log line: the query is dropped (some providers
+    /// pass the API key there) and every path segment that carries an
+    /// identifier (any segment with a digit, except a short version like
+    /// "v1" or "v1.1") is cut to its last few characters, so an account,
+    /// station or device ID never lands whole in a public log.
+    public static func redactedPath(_ path: String) -> String {
+        let withoutQuery = path.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? path
+        return withoutQuery.split(separator: "/", omittingEmptySubsequences: false).map { segment -> String in
+            let isVersion = segment.first == "v" && segment.count <= 5
+            guard segment.count >= 4, !isVersion, !segment.contains("."),
+                  segment.contains(where: \.isNumber) else { return String(segment) }
+            return "…" + segment.suffix(min(4, segment.count / 2))
+        }.joined(separator: "/")
+    }
 }
 
 #if canImport(os)
