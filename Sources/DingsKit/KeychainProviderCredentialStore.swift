@@ -7,20 +7,24 @@ import Security
 /// extension can read it), account "<provider>-credentials", with the
 /// protection class from `KeychainSupport` (readable while the device is
 /// locked, which widgets and background refresh need). Items an app stored
-/// under other account names are untouched.
+/// under other account names are untouched. Providers listed in
+/// `DingsConfig.keychainSyncedProviders` sync through iCloud Keychain.
 public struct KeychainProviderCredentialStore: ProviderCredentialStore {
     private let provider: Provider
     private let service: String
     private let accessGroup: String?
+    public let synchronizable: Bool
 
     public init(
         provider: Provider,
         service: String = Dings.config.keychainService,
-        accessGroup: String? = Dings.config.keychainAccessGroup
+        accessGroup: String? = Dings.config.keychainAccessGroup,
+        synchronizable: Bool? = nil
     ) {
         self.provider = provider
         self.service = service
         self.accessGroup = accessGroup
+        self.synchronizable = synchronizable ?? Dings.config.keychainSyncedProviders.contains(provider)
     }
 
     private var account: String { "\(provider.rawValue)-credentials" }
@@ -35,8 +39,19 @@ public struct KeychainProviderCredentialStore: ProviderCredentialStore {
         return query
     }
 
+    private func query(for operation: KeychainSupport.Operation) -> [String: Any] {
+        KeychainSupport.scoped(baseQuery(), synchronizable: synchronizable, for: operation)
+    }
+
+    /// Moves a device-only item saved before this provider synced to iCloud
+    /// Keychain. No-op for a device-only store. Call once at app start.
+    public func moveToSynchronizableIfNeeded() {
+        guard synchronizable else { return }
+        KeychainSupport.moveToSynchronizable(baseQuery())
+    }
+
     public func load() throws -> ProviderCredentials? {
-        var query = baseQuery()
+        var query = query(for: .read)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         var item: CFTypeRef?
@@ -66,7 +81,7 @@ public struct KeychainProviderCredentialStore: ProviderCredentialStore {
 
         // Add-or-update: `SecItemUpdate` keeps the item in place so there is
         // no delete/re-add crash window.
-        var addQuery = baseQuery()
+        var addQuery = query(for: .write)
         addQuery[kSecValueData as String] = data
         addQuery[kSecAttrAccessible as String] = KeychainSupport.accessibility
         let status = SecItemAdd(addQuery as CFDictionary, nil)
@@ -78,7 +93,7 @@ public struct KeychainProviderCredentialStore: ProviderCredentialStore {
                 kSecValueData as String: data,
                 kSecAttrAccessible as String: KeychainSupport.accessibility,
             ]
-            let updateStatus = SecItemUpdate(baseQuery() as CFDictionary, updates as CFDictionary)
+            let updateStatus = SecItemUpdate(query(for: .write) as CFDictionary, updates as CFDictionary)
             guard updateStatus == errSecSuccess else {
                 Log.credentials.error("keychain update failed (\(provider.rawValue), OSStatus \(updateStatus))")
                 throw ProviderAPIError.storage(provider, coreLocalized("Keychain write failed (OSStatus \(String(updateStatus)))"))
@@ -91,7 +106,7 @@ public struct KeychainProviderCredentialStore: ProviderCredentialStore {
     }
 
     public func clear() throws {
-        let status = SecItemDelete(baseQuery() as CFDictionary)
+        let status = SecItemDelete(query(for: .delete) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             Log.credentials.error("keychain delete failed (\(provider.rawValue), OSStatus \(status))")
             throw ProviderAPIError.storage(provider, coreLocalized("Keychain delete failed (OSStatus \(String(status)))"))

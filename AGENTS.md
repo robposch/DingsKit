@@ -82,7 +82,10 @@ main-actor) drives one provider's setup form: `spec`, `values`, `state`
 `clear(_:)`. Its no-arg init builds one keychain store per registered spec.
 `FreshInstallGuard.run(connections:cache:marker:)` runs once at app start
 (not from extensions) and wipes credentials that survived an uninstall, since
-keychain items outlive the app and `UserDefaults` does not.
+keychain items outlive the app and `UserDefaults` does not. Do not combine it with
+synced credentials (`DingsConfig.keychainSyncedProviders`): deleting a synced
+item deletes it on every device. `credentialsLost(given:)` tells "the key is
+gone" (live cache, no key) apart from a keychain that is only locked.
 
 **Cache and App-Group stores.** `CachedReadings` is the non-secret snapshot the
 app writes and the widget reads: `devices`, `rateLimitRemaining`, `fetchedAt`,

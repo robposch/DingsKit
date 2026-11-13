@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### DingsKit
+
+- `DingsConfig.keychainSyncedProviders`: providers whose credentials sync
+  through iCloud Keychain. A device-only keychain item often does not come
+  back after a restore onto a new device; a synced one does. Deleting a synced
+  item deletes it on every device, so leave out providers whose stored
+  credentials rotate. Empty by default, so nothing changes until an app opts in.
+- `KeychainProviderCredentialStore` takes the setting (or an explicit
+  `synchronizable:`); a synced store still reads and deletes a device-only item
+  an earlier build saved. `moveToSynchronizableIfNeeded()` moves that item to
+  iCloud Keychain, add first and delete second.
+- `KeychainSupport.scoped(_:synchronizable:for:)` and
+  `KeychainSupport.moveToSynchronizable(_:)`: the same for an app's own stores.
+- `ConnectionsStore.credentialsLost(given:)`: live readings are cached but no
+  provider has a key. An unreadable keychain (before the first unlock) does not
+  count as lost.
+
 ## 0.3.0 - Apple Watch sync
 
 The plumbing an Apple Watch app needs to fetch readings on its own. No raw

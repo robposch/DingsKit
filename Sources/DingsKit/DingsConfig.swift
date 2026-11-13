@@ -8,6 +8,13 @@ public struct DingsConfig: Sendable {
     public var appGroupSuite: String
     public var keychainService: String
     public var keychainAccessGroup: String?
+    /// Providers whose credentials sync through iCloud Keychain instead of
+    /// staying on this device. A synced item comes back after a restore or on
+    /// a new device (a device-only item often does not), and deleting it
+    /// deletes it on every device. Leave out providers whose stored
+    /// credentials rotate (OAuth refresh tokens): two devices renewing the same
+    /// token would sign each other out. Empty by default.
+    public var keychainSyncedProviders: Set<Provider> = []
     public var logSubsystem: String
     public var backgroundTaskID: String
     public var refresh: RefreshPolicyValues

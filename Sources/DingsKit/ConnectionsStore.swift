@@ -38,6 +38,19 @@ public struct ConnectionsStore: Sendable {
         order.filter { (try? stores[$0]?.load()).flatMap { $0 } != nil }
     }
 
+    /// True when `snapshot` holds live readings but no provider has a key: the
+    /// app was connected, and the key is gone (typically a restore that brought
+    /// back the app's data but not its keychain item). Conservative: a store
+    /// that cannot be read (keychain locked before the first unlock) counts as
+    /// still holding a key, so a reboot never reads as a lost key.
+    public func credentialsLost(given snapshot: CachedReadings?) -> Bool {
+        guard let snapshot, !snapshot.isDemo, !snapshot.devices.isEmpty else { return false }
+        return order.allSatisfy { provider in
+            guard let store = stores[provider] else { return true }
+            do { return try store.load() == nil } catch { return false }
+        }
+    }
+
     public func loadCredentials(_ provider: Provider) throws -> ProviderCredentials? {
         try stores[provider]?.load()
     }
