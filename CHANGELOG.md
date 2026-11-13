@@ -24,9 +24,20 @@ values changed.
 - `ConnectionsStore.providers`: every provider the store covers, configured or
   not.
 - `DataMode` is `Codable`.
+- `URLSessionTransport` defaults to an ephemeral session with no URL cache,
+  cookie or credential storage and a 15-second request timeout. Responses
+  used to be written to `Cache.db` keyed by full URL, which for some
+  providers includes the API key; whatever an earlier build stored there is
+  removed once.
+- `Log.redactedPath(_:)`: request paths in logs keep their route but drop
+  the query and shorten account, station and device identifiers.
+- `WCSessionTransport` cancels credential transfers still queued for a
+  watch that was unpaired or had the app removed.
 
 ### DingsKitUI
 
+- `ProviderSetupView` hides a revealed secret again when the app leaves the
+  foreground, so it is not captured in the app-switcher snapshot.
 - `RefreshErrorBanner(message:title:)`: an optional headline replaces
   "Couldn’t refresh. Showing older data" where no older data is on screen.
 
