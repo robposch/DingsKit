@@ -40,6 +40,9 @@ public struct ReadingsRefresher: Sendable {
     /// so the app passes its `MockTransport(routes:)`; the default empty
     /// `MockTransport()` 404s every route (fine when no registry provider needs demo).
     private let demoTransport: Transport
+    /// A UI-test situation to serve instead of live or demo data; see
+    /// `TestScenario`. `nil` outside UI tests, and always in release builds.
+    private let testScenario: TestScenario?
 
     /// - Parameters:
     ///   - connections: Source of the user's own per-provider credentials.
@@ -64,7 +67,8 @@ public struct ReadingsRefresher: Sendable {
         dataModeStore: DataModeStore? = DataModeStore(),
         clientOverrides: [Provider: @Sendable (Transport) throws -> any ProviderClient] = [:],
         demoClients: [(Provider, @Sendable () throws -> any ProviderClient)] = [],
-        demoTransport: Transport = MockTransport()
+        demoTransport: Transport = MockTransport(),
+        testScenario: TestScenario? = TestScenarioStore.current
     ) {
         self.connections = connections
         self.cache = cache
@@ -73,6 +77,7 @@ public struct ReadingsRefresher: Sendable {
         self.clientOverrides = clientOverrides
         self.demoClients = demoClients
         self.demoTransport = demoTransport
+        self.testScenario = testScenario
     }
 
     /// Fetches fresh readings from every configured provider and writes the
@@ -84,6 +89,9 @@ public struct ReadingsRefresher: Sendable {
     /// - Returns: The merged `ReadingsResult`, with a per-provider outcome list.
     @discardableResult
     public func refresh() async throws -> ReadingsResult {
+        if let testScenario {
+            return try await refreshScenario(testScenario)
+        }
         if (dataModeStore?.load() ?? .live) == .demo {
             return try await refreshDemo()
         }
@@ -137,6 +145,55 @@ public struct ReadingsRefresher: Sendable {
         guard !providers.isEmpty else {
             throw DingsError.missingCredentials(coreLocalized("No saved credentials."))
         }
+        let sources = providers.map { provider in
+            Source(provider: provider) {
+                let client = try makeClient(for: provider)
+                let devices = try await client.fetchAllReadings()
+                return (devices, (client as? RateLimitReporting)?.rateLimitRemaining)
+            }
+        }
+        return try await mergeRefresh(sources, now: Date())
+    }
+
+    /// A UI-test scenario: the demo data, changed the way the scenario says,
+    /// through the same merge as a live refresh. A provider whose demo
+    /// fixture does not load takes no part, so only a scenario's own
+    /// failures show up as failures.
+    private func refreshScenario(_ scenario: TestScenario) async throws -> ReadingsResult {
+        var available: [(Provider, [DeviceReadings])] = []
+        let fixtures: [(Provider, @Sendable () throws -> any ProviderClient)] = demoClients
+            + ProviderSpec.all.map { spec in
+                (spec.provider, { spec.makeClient(spec.demoCredentials, demoTransport) })
+            }
+        for (provider, make) in fixtures {
+            do {
+                available.append((provider, try await make().fetchAllReadings()))
+            } catch {
+                Log.client.error("scenario: no demo data for \(provider.rawValue): \(error.localizedDescription)")
+            }
+        }
+        let sources = available.enumerated().map { index, entry in
+            Source(provider: entry.0) {
+                if scenario.fails(entry.0, isFirst: index == 0) {
+                    throw ProviderAPIError.http(entry.0, 503)
+                }
+                return (scenario.apply(to: entry.1), nil)
+            }
+        }
+        return try await mergeRefresh(sources, now: Date().addingTimeInterval(-scenario.age))
+    }
+
+    /// One provider's fetch for `mergeRefresh`: its devices and, if it
+    /// reports one, its remaining rate limit.
+    private struct Source {
+        let provider: Provider
+        let fetch: () async throws -> ([DeviceReadings], Int?)
+    }
+
+    /// The live merge: each provider fetched on its own, fail-soft. `now` is
+    /// what this run stamps as its fetch time.
+    private func mergeRefresh(_ sources: [Source], now: Date) async throws -> ReadingsResult {
+        let providers = sources.map(\.provider)
 
         // A demo snapshot is not previous *live* data. Right after a switch
         // from demo to live the cache still holds it; carrying its devices,
@@ -149,16 +206,15 @@ public struct ReadingsRefresher: Sendable {
         var providerFetchedAt: [Provider: Date] = [:]
         var firstError: Error?
 
-        for provider in providers {
+        for source in sources {
+            let provider = source.provider
             do {
-                let client = try makeClient(for: provider)
-                let fetched = try await client.fetchAllReadings()
-                if let reporter = client as? RateLimitReporting,
-                   let remaining = reporter.rateLimitRemaining {
+                let (fetched, remaining) = try await source.fetch()
+                if let remaining {
                     rateLimitRemaining = remaining
                 }
                 outcomes.append(ProviderRefreshOutcome(provider: provider, succeeded: true, message: nil))
-                providerFetchedAt[provider] = Date()
+                providerFetchedAt[provider] = now
                 devicesByProvider[provider] = keepingPreviousReadings(for: fetched, of: provider, from: previous)
             } catch {
                 // Fail-soft per provider: keep its previous devices from the
@@ -187,7 +243,7 @@ public struct ReadingsRefresher: Sendable {
             outcomes: outcomes,
             providerFetchedAt: providerFetchedAt
         )
-        try saveSnapshot(result, isDemo: false)
+        try saveSnapshot(result, isDemo: false, fetchedAt: now)
         return result
     }
 
@@ -243,12 +299,12 @@ public struct ReadingsRefresher: Sendable {
         "…" + serial.suffix(4)
     }
 
-    private func saveSnapshot(_ result: ReadingsResult, isDemo: Bool) throws {
+    private func saveSnapshot(_ result: ReadingsResult, isDemo: Bool, fetchedAt: Date = Date()) throws {
         guard let cache else { return }
         try cache.save(CachedReadings(
             devices: result.devices,
             rateLimitRemaining: result.rateLimitRemaining,
-            fetchedAt: Date(),
+            fetchedAt: fetchedAt,
             providerFetchedAt: result.providerFetchedAt,
             isDemo: isDemo
         ))

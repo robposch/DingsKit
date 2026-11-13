@@ -31,6 +31,12 @@ values changed.
   removed once.
 - `Log.redactedPath(_:)`: request paths in logs keep their route but drop
   the query and shorten account, station and device identifiers.
+- `TestScenario` and `TestScenarioStore`: deterministic data situations for
+  UI tests, set with `--uitest-scenario` (a provider failing, all failing,
+  an empty account, stale data, a removed item). Built from the app's own
+  demo data and run through the same merge as a live refresh, so the app and
+  its widgets behave as with real data gone wrong. Only consulted in debug
+  builds.
 - `decodingSummary(_:)`: one short phrase for a failed decode ("missing
   field ‘body’") instead of `DecodingError`'s multi-line dump.
 - `WCSessionTransport` cancels credential transfers still queued for a
