@@ -30,11 +30,11 @@ public struct HomeScreen {
         tapWhenPresent(springboard.buttons["Done"], file: file, line: line)
         let placed = widgetElements.firstMatch
         XCTAssertTrue(placed.waitForExistence(timeout: 10), "The widget was not placed", file: file, line: line)
-        guard let widget = placedWidgets().first else {
+        guard let widget = placedWidgets().first, let frame = currentFrame(of: widget) else {
             XCTFail("The widget was not placed", file: file, line: line)
-            return PlacedWidget(element: placed, home: self)
+            return PlacedWidget(frame: .zero, home: self)
         }
-        return PlacedWidget(element: widget, home: self)
+        return PlacedWidget(frame: frame, home: self)
     }
 
     /// The app's widgets on the visible page. The app icon carries the same
@@ -47,22 +47,59 @@ public struct HomeScreen {
         }
     }
 
-    /// The element's frame, or `nil` if it is gone. Reading `frame` directly
-    /// fails the test when the element vanished meanwhile, as one does while
-    /// a removal animates; a snapshot reports it instead.
+    /// The element's frame on screen, or `nil` if it is gone. Reading
+    /// `frame` of a vanished element fails the test, as happens while a
+    /// removal animates, so a snapshot checks first that it is there. The
+    /// snapshot's own frame is not used: for a widget it is relative to its
+    /// container, not the screen.
     func currentFrame(of element: XCUIElement) -> CGRect? {
-        (try? element.snapshot())?.frame
+        guard (try? element.snapshot()) != nil else { return nil }
+        return element.frame
     }
 
-    /// Removes widgets an earlier, interrupted run left behind, which would
-    /// otherwise be mistaken for this run's.
+    /// Removes widgets an earlier, interrupted run left behind, on every
+    /// Home Screen page, then shows the app icon's page.
     public func removeLeftoverWidgets() {
-        var attempts = 0
-        while let widget = placedWidgets().first, attempts < 10 {
-            remove(widget)
-            attempts += 1
-            sleep(2)
+        goToFirstPage()
+        for _ in 0..<Self.maxPages {
+            var attempts = 0
+            while let widget = placedWidgets().first, attempts < 10 {
+                remove(widget)
+                attempts += 1
+                sleep(2)
+            }
+            guard nextPage() else { break }
         }
+        showAppPage()
+    }
+
+    /// Pages through the Home Screen until the app icon is on screen.
+    public func showAppPage() {
+        goToFirstPage()
+        for _ in 0..<Self.maxPages {
+            if visibleIcon != nil { return }
+            guard nextPage() else { return }
+        }
+    }
+
+    private static let maxPages = 8
+
+    private func goToFirstPage() {
+        XCUIDevice.shared.press(.home)
+        sleep(1)
+    }
+
+    /// Swipes to the next page. `false` on the last one.
+    private func nextPage() -> Bool {
+        let indicator = springboard.pageIndicators.firstMatch
+        let before = indicator.value as? String
+        springboard.swipeLeft()
+        sleep(1)
+        return (indicator.value as? String) != before
+    }
+
+    private var visibleIcon: XCUIElement? {
+        springboard.icons.matching(identifier: appName).allElementsBoundByIndex.first(where: \.isHittable)
     }
 
     /// Presses at the widget's position rather than on the element: while a
@@ -93,10 +130,8 @@ public struct HomeScreen {
         guard !springboard.buttons["Done"].exists else { return }
         // SpringBoard also lists the icon off-screen (App Library, other
         // pages); press the one on the visible page.
-        let icons = springboard.icons.matching(identifier: appName)
-        XCTAssertTrue(icons.firstMatch.waitForExistence(timeout: 10),
-                      "The \(appName) icon is not on the Home Screen", file: file, line: line)
-        guard let icon = icons.allElementsBoundByIndex.first(where: \.isHittable) else {
+        if visibleIcon == nil { showAppPage() }
+        guard let icon = visibleIcon else {
             XCTFail("No visible \(appName) icon on the Home Screen", file: file, line: line)
             return
         }
@@ -106,11 +141,22 @@ public struct HomeScreen {
     }
 }
 
-/// A widget placed on the Home Screen.
+/// A widget placed on the Home Screen, identified by where it sits: a
+/// query position could point at another widget once the layout shifts.
 @MainActor
 public struct PlacedWidget {
-    public let element: XCUIElement
+    let frame: CGRect
     let home: HomeScreen
+
+    /// The widget's element on screen now.
+    public var element: XCUIElement {
+        let candidates = home.springboard.otherElements
+            .matching(NSPredicate(format: "label == %@", home.appName)).allElementsBoundByIndex
+        return candidates.first { candidate in
+            guard let current = home.currentFrame(of: candidate) else { return false }
+            return abs(current.midX - frame.midX) < 4 && abs(current.midY - frame.midY) < 4
+        } ?? candidates.first ?? home.springboard.otherElements[home.appName]
+    }
 
     /// A text the widget shows.
     public func text(_ label: String) -> XCUIElement {
@@ -128,9 +174,12 @@ public struct PlacedWidget {
         element.press(forDuration: 1.5)
         tapWhenPresent(home.springboard.buttons["com.apple.springboardhome.application-shortcut-item.configure-widget"],
                        file: file, line: line)
-        XCTAssertTrue(home.springboard.staticTexts[fieldTitle].waitForExistence(timeout: 30),
-                      "The widget editor did not open", file: file, line: line)
-        return WidgetEditor(springboard: home.springboard)
+        // Any element: a single-value field's title is a text, a list field's
+        // title is a section header.
+        let title = home.springboard.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", fieldTitle)).firstMatch
+        XCTAssertTrue(title.waitForExistence(timeout: 30), "The widget editor did not open", file: file, line: line)
+        return WidgetEditor(springboard: home.springboard, fieldTitle: title)
     }
 
     public func remove() {

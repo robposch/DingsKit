@@ -6,6 +6,8 @@ import XCTest
 @MainActor
 public struct WidgetEditor {
     let springboard: XCUIApplication
+    /// The field title the editor was recognised by; gone once it closes.
+    let fieldTitle: XCUIElement
 
     /// Whether the editor shows a list field ("Add New Item"), such as a
     /// multi-select of sensors.
@@ -30,6 +32,14 @@ public struct WidgetEditor {
         tapWhenPresent(addItemButton, file: file, line: line)
     }
 
+    /// Types into the options' search field. iOS only builds the rows on
+    /// screen, so an option far down a long list must be searched for.
+    public func search(_ text: String, file: StaticString = #filePath, line: UInt = #line) {
+        let field = springboard.searchFields.firstMatch
+        tapWhenPresent(field, file: file, line: line)
+        field.typeText(text)
+    }
+
     /// Whether the open list of options contains this one.
     public func offers(_ option: String, timeout: TimeInterval = 0) -> Bool {
         let text = optionText(option)
@@ -40,9 +50,15 @@ public struct WidgetEditor {
         tapWhenPresent(optionText(option), file: file, line: line)
     }
 
-    /// Closes the editor by tapping outside it.
-    public func close() {
-        springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
+    /// Closes the editor by tapping outside it, and checks it closed: a tap
+    /// while the sheet is still animating in is ignored, so it is repeated.
+    public func close(file: StaticString = #filePath, line: UInt = #line) {
+        for _ in 0..<3 {
+            springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
+            let gone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: fieldTitle)
+            if XCTWaiter.wait(for: [gone], timeout: 3) == .completed { return }
+        }
+        XCTFail("The widget editor did not close", file: file, line: line)
     }
 
     private var addItemButton: XCUIElement {

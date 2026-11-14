@@ -80,8 +80,10 @@ need not repeat it:
 - `HomeScreen`: places an app's widget from the widget gallery, finds and
   removes placed widgets, clears widgets an interrupted run left behind.
 - `PlacedWidget` and `WidgetEditor`: read what a widget shows, open iOS's
-  widget editor, pick a field's value, open a list field's options, check
-  what is offered, pick one.
+  widget editor, pick a field's value, open a list field's options, search
+  them, check what is offered, pick one, close the editor and confirm it
+  closed. A placed widget is found again by its position, and cleanup walks
+  every Home Screen page.
 - `SystemPrompts.dismissSavePassword(in:)`, including the iOS 27 dialog
   that ignores an element tap.
 - `Screenshots.attach(_:to:)`.
