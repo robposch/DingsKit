@@ -86,6 +86,12 @@ need not repeat it:
   every Home Screen page.
 - `SystemPrompts.dismissSavePassword(in:)`, including the iOS 27 dialog
   that ignores an element tap.
+- `DingsJourneyTests`: the journeys every Dings app shares, run by
+  subclassing with an `AppTestProfile`: "Try a demo", the readings screen
+  under live, partial-failure, all-failed and empty data, and a placed
+  widget configured through iOS's editor. Journeys an app cannot run (one
+  provider, no configurable widget) are skipped. `DingsLaunch` names the
+  shared launch arguments.
 - `Screenshots.attach(_:to:)`.
 
 ## 0.2.0 - shared onboarding, readings, and widget layer
