@@ -24,6 +24,11 @@ public struct HomeScreen {
         enterEditing(file: file, line: line)
         tapWhenPresent(springboard.buttons["Edit"], file: file, line: line)
         tapWhenPresent(springboard.buttons["Add Widget"], file: file, line: line)
+        // The gallery lists apps alphabetically and only builds the rows on
+        // screen, so search for the app rather than hope it is near the top.
+        let search = springboard.searchFields["Search Widgets"]
+        tapWhenPresent(search, file: file, line: line)
+        search.typeText(appName)
         tapWhenPresent(springboard.cells[appName], file: file, line: line)
         tapWhenPresent(springboard.buttons.matching(NSPredicate(format: "label ENDSWITH 'Add Widget'")).firstMatch,
                        file: file, line: line)
@@ -89,17 +94,30 @@ public struct HomeScreen {
         sleep(1)
     }
 
-    /// Swipes to the next page. `false` on the last one.
+    /// Swipes to the next Home Screen page. `false` on the last one; the
+    /// App Library after it is not a page, so a swipe into it is undone.
     private func nextPage() -> Bool {
         let indicator = springboard.pageIndicators.firstMatch
         let before = indicator.value as? String
         springboard.swipeLeft()
         sleep(1)
+        if isShowingAppLibrary {
+            springboard.swipeRight()
+            sleep(1)
+            return false
+        }
         return (indicator.value as? String) != before
     }
 
+    private var isShowingAppLibrary: Bool {
+        springboard.searchFields["App Library"].exists
+    }
+
+    /// The app's icon on the visible Home Screen page. An app can live in the
+    /// App Library only, whose icon menu cannot edit the Home Screen.
     private var visibleIcon: XCUIElement? {
-        springboard.icons.matching(identifier: appName).allElementsBoundByIndex.first(where: \.isHittable)
+        guard !isShowingAppLibrary else { return nil }
+        return springboard.icons.matching(identifier: appName).allElementsBoundByIndex.first(where: \.isHittable)
     }
 
     /// Presses at the widget's position rather than on the element: while a
@@ -131,13 +149,15 @@ public struct HomeScreen {
         // SpringBoard also lists the icon off-screen (App Library, other
         // pages); press the one on the visible page.
         if visibleIcon == nil { showAppPage() }
-        guard let icon = visibleIcon else {
-            XCTFail("No visible \(appName) icon on the Home Screen", file: file, line: line)
-            return
+        if let icon = visibleIcon {
+            icon.press(forDuration: 1.5)
+            tapWhenPresent(springboard.buttons["com.apple.springboardhome.application-shortcut-item.rearrange-icons"],
+                           file: file, line: line)
+        } else {
+            // The app is in the App Library only. Leftover widgets are gone
+            // by now, so an empty spot above the dock is wallpaper.
+            springboard.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.72)).press(forDuration: 1.5)
         }
-        icon.press(forDuration: 1.5)
-        tapWhenPresent(springboard.buttons["com.apple.springboardhome.application-shortcut-item.rearrange-icons"],
-                       file: file, line: line)
     }
 }
 
@@ -158,9 +178,15 @@ public struct PlacedWidget {
         } ?? candidates.first ?? home.springboard.otherElements[home.appName]
     }
 
-    /// A text the widget shows.
+    /// A text the widget shows, as its own text element.
     public func text(_ label: String) -> XCUIElement {
         element.staticTexts.matching(NSPredicate(format: "label == %@", label)).firstMatch
+    }
+
+    /// Any element of the widget whose label contains `text`. Widgets often
+    /// combine several texts into one accessibility label ("Sam, 191 mg/dL").
+    public func showing(_ text: String) -> XCUIElement {
+        element.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
     }
 
     /// Opens iOS's widget editor and waits until it has loaded the widget's

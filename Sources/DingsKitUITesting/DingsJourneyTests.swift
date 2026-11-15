@@ -126,23 +126,27 @@ open class DingsJourneyTests: XCTestCase {
         XCTAssertTrue(widget.text(config.unconfiguredText).waitForExistence(timeout: 15))
 
         var editor = widget.openEditor(waitingFor: config.field)
-        editor.openListOptions()
-        editor.search(config.search)
-        XCTAssertTrue(editor.offers(config.option, timeout: 5), "The editor does not offer \(config.option)")
-        if let notOffered = config.notOffered {
-            XCTAssertFalse(editor.offers(notOffered), "The editor must not offer \(notOffered)")
+        if config.isList {
+            editor.openListOptions()
+            if let search = config.search { editor.search(search) }
+            XCTAssertTrue(editor.offers(config.option, timeout: 5), "The editor does not offer \(config.option)")
+            if let notOffered = config.notOffered {
+                XCTAssertFalse(editor.offers(notOffered), "The editor must not offer \(notOffered)")
+            }
+            editor.pick(config.option)
+        } else {
+            editor.choose(config.field, optionBeginningWith: config.option)
         }
-        editor.pick(config.option)
         editor.close()
 
         for text in config.shows {
-            XCTAssertTrue(widget.text(text).waitForExistence(timeout: 20), "The widget does not show \(text)")
+            XCTAssertTrue(widget.showing(text).waitForExistence(timeout: 20), "The widget does not show \(text)")
         }
 
         editor = widget.openEditor(waitingFor: config.field)
         editor.close()
-        XCTAssertTrue(widget.text(config.shows[0]).waitForExistence(timeout: 20))
-        XCTAssertFalse(widget.text(config.unconfiguredText).exists)
+        XCTAssertTrue(widget.showing(config.shows[0]).waitForExistence(timeout: 20))
+        XCTAssertFalse(widget.showing(config.unconfiguredText).exists)
     }
 }
 #endif

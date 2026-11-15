@@ -49,10 +49,13 @@ public struct AppTestProfile: Sendable {
     public struct WidgetProfile: Sendable {
         /// The editor's field title.
         public var field: String
+        /// A list field ("Add New Item", several values) rather than a field
+        /// holding one value.
+        public var isList: Bool
         /// What an unconfigured widget says.
         public var unconfiguredText: String
-        /// A search term that finds `option` in a long list of options.
-        public var search: String
+        /// For a list field: a search term that finds `option` in a long list.
+        public var search: String?
         /// An option to pick, as the editor lists it.
         public var option: String
         /// What the widget shows once `option` is picked.
@@ -60,9 +63,10 @@ public struct AppTestProfile: Sendable {
         /// An option the editor must not offer.
         public var notOffered: String?
 
-        public init(field: String, unconfiguredText: String, search: String, option: String,
-                    shows: [String], notOffered: String? = nil) {
+        public init(field: String, isList: Bool = true, unconfiguredText: String, search: String? = nil,
+                    option: String, shows: [String], notOffered: String? = nil) {
             self.field = field
+            self.isList = isList
             self.unconfiguredText = unconfiguredText
             self.search = search
             self.option = option
