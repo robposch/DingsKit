@@ -199,6 +199,10 @@ open class DingsJourneyTests: XCTestCase {
         var app = launch(DingsLaunch.demo)
         XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).waitForExistence(timeout: 15))
         try audit(app, screen: "readings")
+        // An icon button whose words go missing still passes the audit: iOS
+        // reads out the symbol's name instead ("Gear shape"). Check the words.
+        XCTAssertEqual(app.buttons["readings.settings"].label, "Settings",
+                       "VoiceOver does not call the Settings button \"Settings\"")
         openSettings(app)
         sleep(2)
         try audit(app, screen: "settings")
