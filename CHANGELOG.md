@@ -63,6 +63,13 @@ values changed.
 
 ### DingsKitUI
 
+- `AccessibleColors`: darker Light Mode shades for text and status icons
+  that carry meaning (warning, good, fair, poor), so they meet contrast on
+  white. The shared readings list, disclaimer, error banner and refresh log
+  use them; `ReadingsPresenting.ratingTint` colors the rating word.
+- `AdaptiveStack` and `segmentedOrInlinePickerStyle()`: side by side at
+  ordinary text sizes, stacked (or a list) at the accessibility sizes. The
+  readings list's rows use it.
 - `ProviderSetupView` hides a revealed secret again when the app leaves the
   foreground, so it is not captured in the app-switcher snapshot.
 - `RefreshErrorBanner(message:title:)`: an optional headline replaces

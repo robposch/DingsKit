@@ -27,11 +27,11 @@ public struct RefreshErrorBanner: View {
             // Decorative: the combined element below already reads both lines, and
             // the headline says what the glyph says.
             Image(systemName: "wifi.exclamationmark")
-                .foregroundStyle(.orange)
+                .foregroundStyle(AccessibleColors.warning)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title ?? coreLocalized("Couldn’t refresh. Showing older data"))
-                    .font(.callout).foregroundStyle(.orange)
+                    .font(.callout).foregroundStyle(AccessibleColors.warning)
                 Text(message)
                     .font(.caption).foregroundStyle(.secondary)
             }

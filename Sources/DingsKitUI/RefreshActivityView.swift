@@ -31,7 +31,7 @@ public struct RefreshActivityView: View {
                             // text is the source and the time. Without a label a
                             // VoiceOver user never learns the refresh failed.
                             Image(systemName: run.succeeded ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(run.succeeded ? .green : .orange)
+                                .foregroundStyle(run.succeeded ? AccessibleColors.good : AccessibleColors.warning)
                                 .accessibilityLabel(run.succeeded ? Text(coreLocalized("Succeeded")) : Text(coreLocalized("Failed")))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(Self.sourceLabel(run.source))

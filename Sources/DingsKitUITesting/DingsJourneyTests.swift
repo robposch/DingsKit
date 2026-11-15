@@ -167,6 +167,93 @@ open class DingsJourneyTests: XCTestCase {
         XCTAssertFalse(demoBanner(in: app).exists)
     }
 
+    // MARK: Accessibility
+
+    /// Runs iOS's accessibility audit on the screen `app` shows now and
+    /// returns what it finds, one line per issue, without failing.
+    public func auditIssues(_ app: XCUIApplication, screen: String) -> [String] {
+        var found: [String] = []
+        do {
+            try app.performAccessibilityAudit { issue in
+                let element = issue.element.map { "\($0.elementType.rawValue) '\($0.label)' id=\($0.identifier)" } ?? "-"
+                found.append("[\(screen)] \(issue.auditType): \(issue.compactDescription) | \(element)")
+                return true
+            }
+        } catch {
+            found.append("[\(screen)] audit could not run: \(error)")
+        }
+        return found
+    }
+
+    /// iOS's audit on the main screens: contrast, elements without a
+    /// description, tap targets too small, wrong traits. Two kinds of finding
+    /// are excused, each for a stated reason:
+    /// - the system's own "Done" button in a sheet, which the app does not draw;
+    /// - a contrast finding with no element, i.e. decorative graphics;
+    /// - "contrast nearly passed", a warning that iOS's own secondary label
+    ///   color triggers. "Contrast failed" still fails.
+    /// Its text-size checks are left to `testLargerTextGrowsAndStacks`, which
+    /// measures instead: on iOS 27 they flag texts that demonstrably grow.
+    public func testAccessibilityAuditPasses() throws {
+        let profile = try requireProfile()
+        var app = launch(DingsLaunch.demo)
+        XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).waitForExistence(timeout: 15))
+        try audit(app, screen: "readings")
+        openSettings(app)
+        sleep(2)
+        try audit(app, screen: "settings")
+        app.terminate()
+        app = launch(DingsLaunch.fresh)
+        XCTAssertTrue(app.buttons[profile.tryDemoButton].waitForExistence(timeout: 10)
+                      || scroll(to: app.buttons[profile.tryDemoButton], in: app))
+        try audit(app, screen: "setup")
+    }
+
+    private func audit(_ app: XCUIApplication, screen: String) throws {
+        try app.performAccessibilityAudit(for: [.contrast, .elementDetection, .hitRegion,
+                                                .sufficientElementDescription, .trait]) { issue in
+            guard let element = issue.element else {
+                return issue.auditType == .contrast   // decorative graphics
+            }
+            // A warning, not a failure: iOS's standard secondary label color
+            // (section headers, captions) lands here, as in Apple's own apps.
+            if issue.compactDescription.contains("nearly passed") { return true }
+            let isSystemDone = element.elementType == .button && element.label == "Done" && element.identifier.isEmpty
+            if isSystemDone { return true }
+            XCTFail("[\(screen)] \(issue.compactDescription): \(element.label.isEmpty ? element.identifier : element.label)")
+            return true
+        }
+    }
+
+    /// At the largest accessibility text size, text really grows, and a
+    /// label and its control stack instead of squeezing side by side.
+    public func testLargerTextGrowsAndStacks() throws {
+        let profile = try requireProfile()
+        func launchAt(_ size: String) -> XCUIApplication {
+            launch(DingsLaunch.demo + ["-UIPreferredContentSizeCategoryName", size])
+        }
+        var app = launchAt("UICTContentSizeCategoryL")
+        let normalText = element(beginningWith: profile.growingTextOnReadings, in: app)
+        XCTAssertTrue(scroll(to: normalText, in: app), "No \(profile.growingTextOnReadings) on the readings screen")
+        let normalHeight = normalText.frame.height
+        app.terminate()
+
+        app = launchAt("UICTContentSizeCategoryAccessibilityXXXL")
+        let largeText = element(beginningWith: profile.growingTextOnReadings, in: app)
+        XCTAssertTrue(scroll(to: largeText, in: app))
+        XCTAssertGreaterThan(largeText.frame.height, normalHeight * 1.5,
+                             "\(profile.growingTextOnReadings) does not grow with the text size")
+        app.terminate()
+
+        app = launchAt("UICTContentSizeCategoryAccessibilityXXXL")
+        let banner = app.staticTexts["Demo data"]
+        let exit = app.buttons["readings.exitDemo"]
+        XCTAssertTrue(exit.waitForExistence(timeout: 15))
+        XCTAssertTrue(banner.exists)
+        XCTAssertGreaterThan(exit.frame.minY, banner.frame.maxY - 1,
+                             "Exit demo should sit below Demo data at the largest text size")
+    }
+
     // MARK: Widgets
 
     /// A placed widget asks until something is chosen in its editor, then

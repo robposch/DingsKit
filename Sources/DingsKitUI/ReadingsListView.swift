@@ -13,6 +13,7 @@ import DingsKit
 /// screen, without this type having to also carry banner content it has no
 /// vocabulary for.
 public struct ReadingsListView<ExtraRows: View>: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     private let devices: [DeviceReadings]
     private let providerFetchedAt: [Provider: Date]
     private let lastRefreshed: Date?
@@ -77,7 +78,7 @@ public struct ReadingsListView<ExtraRows: View>: View {
     @ViewBuilder
     private func readingRow(_ reading: SensorReading, in device: DeviceReadings) -> some View {
         let rating = presenter.ratingText(for: reading, in: device)
-        HStack {
+        AdaptiveStack {
             Label {
                 Text(reading.type.label)
             } icon: {
@@ -90,11 +91,11 @@ public struct ReadingsListView<ExtraRows: View>: View {
             if rating.isEmpty {
                 Text(presenter.valueText(for: reading, in: device)).foregroundStyle(.secondary)
             } else {
-                VStack(alignment: .trailing, spacing: 1) {
+                VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 1) {
                     Text(presenter.valueText(for: reading, in: device)).foregroundStyle(.secondary)
                     Text(rating)
                         .font(.caption2)
-                        .foregroundStyle(presenter.tint(for: reading, in: device))
+                        .foregroundStyle(presenter.ratingTint(for: reading, in: device))
                 }
             }
         }
@@ -117,7 +118,7 @@ public struct ReadingsListView<ExtraRows: View>: View {
                 .foregroundStyle(.secondary)
         } icon: {
             Image(systemName: "antenna.radiowaves.left.and.right.slash")
-                .foregroundStyle(.orange)
+                .foregroundStyle(AccessibleColors.warning)
         }
         .accessibilityIdentifier("readings.noData.\(device.serialNumber)")
     }
@@ -130,13 +131,13 @@ public struct ReadingsListView<ExtraRows: View>: View {
     /// the same moment its text keeps counting up, rather than only on the
     /// next state-driven re-render.
     private func freshnessRow(label: String, date: Date) -> some View {
-        HStack {
+        AdaptiveStack {
             Text(label)
             Spacer()
             PeriodicRelativeView {
                 let stale = Date().timeIntervalSince(date) > RefreshPolicy.deviceStaleCueAfter
                 Text(date, format: .relative(presentation: .named))
-                    .foregroundStyle(stale ? Color.orange : Color.secondary)
+                    .foregroundStyle(stale ? AccessibleColors.warning : Color.secondary)
             }
         }
         .accessibilityElement(children: .combine)

@@ -26,8 +26,12 @@ public protocol ReadingsPresenting {
     /// none. Deliberately not `QualityRating.displayText`: a glucose app must
     /// say "Low", not "Fair", and "Fair" cannot tell a hypo from a hyper.
     func ratingText(for reading: SensorReading, in device: DeviceReadings) -> String
-    /// Tint for the row's icon, and for the rating word when there is one.
+    /// Tint for the row's icon.
     func tint(for reading: SensorReading, in device: DeviceReadings) -> Color
+    /// Tint for the rating word. Text needs more contrast than an icon, so
+    /// an app with bright tints should return darker shades here (see
+    /// `AccessibleColors`). Defaults to `tint(for:in:)`.
+    func ratingTint(for reading: SensorReading, in device: DeviceReadings) -> Color
     /// SF Symbol name for the row's icon. Defaults to the reading's own
     /// sensor-type icon (see the extension below); override when a reading's
     /// icon depends on its *value*, not just its type, e.g. ZuckerDings'
@@ -44,6 +48,10 @@ public protocol ReadingsPresenting {
 }
 
 public extension ReadingsPresenting {
+    func ratingTint(for reading: SensorReading, in device: DeviceReadings) -> Color {
+        tint(for: reading, in: device)
+    }
+
     /// The reading's own sensor-type icon, right for every reading whose
     /// icon never varies within its type, which is every current reading
     /// except ZuckerDings' trend arrow.

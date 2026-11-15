@@ -31,7 +31,7 @@ public struct DisclaimerBox: View {
             Label(isWarning ? coreLocalized("Before you connect") : coreLocalized("About this app"),
                   systemImage: isWarning ? "exclamationmark.triangle" : "info.circle")
                 .font(.headline)
-                .foregroundStyle(isWarning ? .orange : .secondary)
+                .foregroundStyle(isWarning ? AccessibleColors.warning : .secondary)
             Text(disclosure.disclaimer)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
