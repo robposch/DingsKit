@@ -249,6 +249,24 @@ extension GlobalConfig {
             #expect(result.providerFetchedAt[alpha] == oldSnapshotStamp)
         }
 
+        /// In a snapshot from before per-provider stamps, a failing provider
+        /// inherits the snapshot's date only if the snapshot holds its
+        /// devices; otherwise it never synced and gets no stamp.
+        @Test func legacyCacheWithoutTheProvidersDevicesGivesNoStamp() async throws {
+            let cache = InMemoryReadingsCache(seeded: CachedReadings(
+                devices: [makeDevice("b1", beta, value: 20, recorded: oldRecorded)],
+                rateLimitRemaining: nil, fetchedAt: oldSnapshotStamp, providerFetchedAt: [:]))
+            let refresher = ReadingsRefresher(
+                connections: try connections(order: [alpha, beta], configured: [alpha, beta]),
+                cache: cache,
+                transport: stub([alpha: .failure(503), beta: .devices("[]")]),
+                dataModeStore: nil)
+
+            let result = try await refresher.refresh()
+
+            #expect(result.providerFetchedAt[alpha] == nil)
+        }
+
         /// A provider that has never fetched successfully gets no stamp when
         /// it fails, even though another provider's stamps exist. Inheriting
         /// the snapshot-level `fetchedAt` would claim a sync that never

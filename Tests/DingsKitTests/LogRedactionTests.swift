@@ -14,6 +14,12 @@ import Testing
         #expect(Log.redactedPath("/v1.1/devices/C1A2B3D4E5F6/status") == "/v1.1/devices/…E5F6/status")
     }
 
+    /// A version is "v" and up to four more characters; longer is an ID.
+    @Test func versionLengthLimit() {
+        #expect(Log.redactedPath("/v1234/devices") == "/v1234/devices")
+        #expect(Log.redactedPath("/v12345/devices") == "/…345/devices")
+    }
+
     @Test func routeWordsAndVersionsAreKept() {
         #expect(Log.redactedPath("/v1/devices") == "/v1/devices")
         #expect(Log.redactedPath("/api/getstationsdata") == "/api/getstationsdata")

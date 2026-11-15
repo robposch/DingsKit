@@ -61,6 +61,12 @@ extension GlobalConfig {
             #expect(TestScenario(spec: "live") == TestScenario())
         }
 
+        /// Zero minutes old is a valid age; a negative one is a typo.
+        @Test func staleAcceptsZeroAndRejectsNegative() {
+            #expect(TestScenario(spec: "stale:0") == TestScenario(age: 0))
+            #expect(TestScenario(spec: "stale:-5") == nil)
+        }
+
         @Test func combinesPresetsWithPlus() {
             #expect(TestScenario(spec: "partial-failure+stale:10")
                     == TestScenario(failure: .first, age: 600))
