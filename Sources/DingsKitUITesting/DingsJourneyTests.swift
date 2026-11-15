@@ -108,6 +108,65 @@ open class DingsJourneyTests: XCTestCase {
         XCTAssertTrue(element(beginningWith: profile.emptyAccountTitle, in: app).waitForExistence(timeout: 15))
     }
 
+    // MARK: Settings
+
+    /// Scrolls `app` until `element` exists, for rows a list has not built yet.
+    public func scroll(to element: XCUIElement, in app: XCUIApplication, attempts: Int = 8) -> Bool {
+        var tries = 0
+        while !element.exists && tries < attempts { app.swipeUp(); tries += 1 }
+        return element.exists
+    }
+
+    private func openSettings(_ app: XCUIApplication) {
+        let button = app.buttons["readings.settings"]
+        XCTAssertTrue(button.waitForExistence(timeout: 15), "No Settings button on the readings screen")
+        button.tap()
+    }
+
+    /// Settings opens from the readings screen; About shows the version and
+    /// every legal link.
+    public func testSettingsAboutShowsVersionAndLegalLinks() throws {
+        let profile = try requireProfile()
+        let app = launch(DingsLaunch.demo)
+        openSettings(app)
+        let version = element(beginningWith: "Version", in: app)
+        XCTAssertTrue(scroll(to: version, in: app), "About shows no version")
+        for title in profile.legalLinks {
+            XCTAssertTrue(scroll(to: element(beginningWith: title, in: app), in: app), "About lacks the link \(title)")
+        }
+    }
+
+    /// The refresh log opens from Settings and lists the refresh the
+    /// readings screen just made.
+    public func testRefreshActivityListsTheLatestRefresh() throws {
+        _ = try requireProfile()
+        let app = launch(DingsLaunch.demo)
+        openSettings(app)
+        let row = app.buttons["settings.refreshActivity"]
+        XCTAssertTrue(scroll(to: row, in: app), "Settings has no refresh activity row")
+        row.tap()
+        // The screen's title, not its "Clear log" button: that sits below a
+        // long list and is not built until scrolled to.
+        XCTAssertTrue(app.navigationBars["Refresh activity"].waitForExistence(timeout: 10),
+                      "The refresh log did not open")
+        XCTAssertTrue(element(beginningWith: "App open", in: app).waitForExistence(timeout: 5),
+                      "The refresh log does not list the refresh the app just made")
+        XCTAssertFalse(element(beginningWith: "No refreshes recorded yet", in: app).exists)
+    }
+
+    /// "Exit demo" leaves demo mode and returns to the first setup screen.
+    public func testExitDemoReturnsToSetup() throws {
+        let profile = try requireProfile()
+        let app = launch(DingsLaunch.demo)
+        let exit = app.buttons["readings.exitDemo"]
+        XCTAssertTrue(exit.waitForExistence(timeout: 15))
+        exit.tap()
+        XCTAssertTrue(app.buttons[profile.tryDemoButton].waitForExistence(timeout: 10)
+                      || scroll(to: app.buttons[profile.tryDemoButton], in: app),
+                      "Exit demo did not return to the first screen")
+        XCTAssertFalse(demoBanner(in: app).exists)
+    }
+
     // MARK: Widgets
 
     /// A placed widget asks until something is chosen in its editor, then

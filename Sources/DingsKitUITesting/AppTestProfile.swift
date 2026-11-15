@@ -41,6 +41,11 @@ public struct AppTestProfile: Sendable {
         }
     }
 
+    // MARK: Settings
+
+    /// The legal links About lists, as titled in the app's `DingsConfig`.
+    public var legalLinks: [String] = ["Privacy Policy", "Datenschutzerklärung", "Impressum"]
+
     // MARK: Widgets
 
     /// The Home Screen widget's editor and what it offers with demo data.

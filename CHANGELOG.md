@@ -89,7 +89,9 @@ need not repeat it:
 - `DingsJourneyTests`: the journeys every Dings app shares, run by
   subclassing with an `AppTestProfile`: "Try a demo", the readings screen
   under live, partial-failure, all-failed and empty data, and a placed
-  widget configured through iOS's editor. Journeys an app cannot run (one
+  widget configured through iOS's editor, Settings' About section with
+  the version and legal links, the refresh log, and leaving demo mode.
+  Journeys an app cannot run (one
   provider, no configurable widget) are skipped. `DingsLaunch` names the
   shared launch arguments.
 - `Screenshots.attach(_:to:)`.
