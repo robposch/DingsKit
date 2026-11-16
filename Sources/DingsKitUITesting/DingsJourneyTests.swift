@@ -105,7 +105,9 @@ open class DingsJourneyTests: XCTestCase {
     public func testAnEmptyAccountSaysSo() throws {
         let profile = try requireProfile()
         let app = launch(DingsLaunch.scenario("empty"))
-        XCTAssertTrue(element(beginningWith: profile.emptyAccountTitle, in: app).waitForExistence(timeout: 15))
+        // The title exactly: an explanation below it may start with the same words.
+        XCTAssertTrue(app.staticTexts[profile.emptyAccountTitle].waitForExistence(timeout: 15),
+                      "The empty account has no \"\(profile.emptyAccountTitle)\" title")
     }
 
     // MARK: Settings
