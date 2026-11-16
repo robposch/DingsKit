@@ -242,6 +242,21 @@ open class DingsJourneyTests: XCTestCase {
         XCTAssertTrue(app.buttons[profile.tryDemoButton].waitForExistence(timeout: 10)
                       || scroll(to: app.buttons[profile.tryDemoButton], in: app))
         try audit(app, screen: "setup")
+        // Again at the bottom, so text that started below the screen's edge
+        // is checked where it can be read.
+        app.swipeUp()
+        app.swipeUp()
+        try audit(app, screen: "setup, scrolled down")
+    }
+
+    /// The part of the screen between the navigation bar and the bottom
+    /// edge's fade, where text is drawn on its own background.
+    private func readableArea(of app: XCUIApplication) -> CGRect {
+        let screen = app.windows.firstMatch.frame
+        let bar = app.navigationBars.firstMatch
+        let top = bar.exists ? bar.frame.maxY : screen.minY
+        let bottom = screen.maxY - 50
+        return CGRect(x: screen.minX, y: top, width: screen.width, height: max(0, bottom - top))
     }
 
     private func audit(_ app: XCUIApplication, screen: String) throws {
@@ -255,6 +270,11 @@ open class DingsJourneyTests: XCTestCase {
             if issue.compactDescription.contains("nearly passed") { return true }
             let isSystemDone = element.elementType == .button && element.label == "Done" && element.identifier.isEmpty
             if isSystemDone { return true }
+            // Text under the fade iOS draws at the top (behind the navigation
+            // bar) and bottom edges has its contrast measured against that
+            // fade. Only text in the readable area between them is judged;
+            // the rest is checked once it is scrolled into view.
+            if issue.auditType == .contrast, !self.readableArea(of: app).contains(element.frame) { return true }
             XCTFail("[\(screen)] \(issue.compactDescription): \(element.label.isEmpty ? element.identifier : element.label)")
             return true
         }
