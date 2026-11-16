@@ -168,25 +168,46 @@ public struct PlacedWidget {
     let frame: CGRect
     let home: HomeScreen
 
-    /// The widget's element on screen now.
-    public var element: XCUIElement {
-        let candidates = home.springboard.otherElements
-            .matching(NSPredicate(format: "label == %@", home.appName)).allElementsBoundByIndex
-        return candidates.first { candidate in
-            guard let current = home.currentFrame(of: candidate) else { return false }
-            return abs(current.midX - frame.midX) < 4 && abs(current.midY - frame.midY) < 4
-        } ?? candidates.first ?? home.springboard.otherElements[home.appName]
+    /// The widget's element on screen now. Right after returning to the
+    /// Home Screen, SpringBoard is still animating and the widget is not yet
+    /// where it was placed; this waits up to `settle` seconds for it, rather
+    /// than falling back to another element with the app's name (such as
+    /// its icon), whose texts a check would then search in vain.
+    public var element: XCUIElement { element(settle: 10) }
+
+    func element(settle: TimeInterval) -> XCUIElement {
+        let deadline = Date().addingTimeInterval(settle)
+        var candidates: [XCUIElement] = []
+        repeat {
+            candidates = home.springboard.otherElements
+                .matching(NSPredicate(format: "label == %@", home.appName)).allElementsBoundByIndex
+            let placed = candidates.first { candidate in
+                guard let current = home.currentFrame(of: candidate) else { return false }
+                return abs(current.midX - frame.midX) < 4 && abs(current.midY - frame.midY) < 4
+            }
+            if let placed { return placed }
+            Thread.sleep(forTimeInterval: 0.5)
+        } while Date() < deadline
+        return candidates.first ?? home.springboard.otherElements[home.appName]
+    }
+
+    /// The app's widget elements. While a widget redraws, iOS keeps the old
+    /// rendering in place under a second element of the same name and frame,
+    /// so a text check must look in all of them, not in one picked by
+    /// position. `removeLeftoverWidgets` leaves only the widget under test.
+    private var widgetElements: XCUIElementQuery {
+        home.springboard.otherElements.matching(NSPredicate(format: "label == %@", home.appName))
     }
 
     /// A text the widget shows, as its own text element.
     public func text(_ label: String) -> XCUIElement {
-        element.staticTexts.matching(NSPredicate(format: "label == %@", label)).firstMatch
+        widgetElements.staticTexts.matching(NSPredicate(format: "label == %@", label)).firstMatch
     }
 
     /// Any element of the widget whose label contains `text`. Widgets often
     /// combine several texts into one accessibility label ("Sam, 191 mg/dL").
     public func showing(_ text: String) -> XCUIElement {
-        element.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
+        widgetElements.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
     }
 
     /// Opens iOS's widget editor and waits until it has loaded the widget's
