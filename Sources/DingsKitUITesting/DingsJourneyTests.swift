@@ -110,6 +110,15 @@ open class DingsJourneyTests: XCTestCase {
                       "The empty account has no \"\(profile.emptyAccountTitle)\" title")
     }
 
+    /// Hours-old readings say how old they are.
+    public func testStaleReadingsShowTheirAge() throws {
+        let profile = try requireProfile()
+        let app = launch(DingsLaunch.scenario("stale"))
+        XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).waitForExistence(timeout: 15))
+        let age = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "3 hours ago")).firstMatch
+        XCTAssertTrue(scroll(to: age, in: app), "The readings do not say they are 3 hours old")
+    }
+
     // MARK: Settings
 
     /// Scrolls `app` until `element` exists, for rows a list has not built yet.
