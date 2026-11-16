@@ -80,6 +80,28 @@ public struct ReadingsRefresher: Sendable {
         self.testScenario = testScenario
     }
 
+    /// The readings the last refresh cached, for an app to show at launch
+    /// before its first refresh finishes. With them on screen, a first refresh
+    /// that fails keeps them and reports the failure, as every later refresh
+    /// does, instead of replacing them with an error while the widgets still
+    /// show them.
+    ///
+    /// `nil` when nothing is cached, or when the cache belongs to the other
+    /// mode (demo readings while live, or live readings in demo).
+    public func cachedResult() -> ReadingsResult? {
+        guard let cached = cache?.load(), !cached.devices.isEmpty else { return nil }
+        let isDemo = (dataModeStore?.load() ?? .live) == .demo
+        guard cached.isDemo == isDemo else { return nil }
+        // Snapshots from before per-provider stamps carry none; the
+        // snapshot's own time stands in, so "Synced" still shows.
+        var stamps = cached.providerFetchedAt
+        for provider in Set(cached.devices.map(\.provider)) where stamps[provider] == nil {
+            stamps[provider] = cached.fetchedAt
+        }
+        return ReadingsResult(devices: cached.devices, rateLimitRemaining: cached.rateLimitRemaining,
+                              providerFetchedAt: stamps)
+    }
+
     /// Fetches fresh readings from every configured provider and writes the
     /// merged snapshot to the cache if one was supplied.
     ///

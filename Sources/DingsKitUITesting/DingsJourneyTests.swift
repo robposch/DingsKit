@@ -119,6 +119,26 @@ open class DingsJourneyTests: XCTestCase {
         XCTAssertTrue(scroll(to: age, in: app), "The readings do not say they are 3 hours old")
     }
 
+    /// With readings cached, a refresh that fails, on opening or by pulling,
+    /// keeps them on screen and says so, rather than an error screen.
+    public func testAFailedRefreshKeepsTheReadings() throws {
+        let profile = try requireProfile()
+        var app = launch(DingsLaunch.scenario("live"))
+        XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).waitForExistence(timeout: 15))
+        app.terminate()
+
+        app = launch(DingsLaunch.scenario("all-failed+keep-cache"))
+        XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).waitForExistence(timeout: 15),
+                      "Opening the app while every service fails drops the cached readings")
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3))
+            .press(forDuration: 0.1, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)))
+        let notice = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS[c] %@", "couldn’t refresh")).firstMatch
+        XCTAssertTrue(notice.waitForExistence(timeout: 15), "A failed refresh does not say so")
+        XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).exists, "A failed refresh dropped the readings")
+        XCTAssertFalse(element(beginningWith: "Couldn’t load", in: app).exists, "A failed refresh replaced the readings")
+    }
+
     // MARK: Settings
 
     /// Scrolls `app` until `element` exists, for rows a list has not built yet.
