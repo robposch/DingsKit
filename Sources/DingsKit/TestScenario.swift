@@ -19,6 +19,8 @@ import Foundation
 /// - `stale`, `stale:<minutes>`: everything is 3 hours (or that many
 ///   minutes) old
 /// - `item-removed:<serial>`: that item no longer exists
+/// - `slow:<seconds>`: answer only after that many seconds, so the loading
+///   state can be seen
 /// - `keep-cache`: keep the readings an earlier launch cached; by default a
 ///   scenario starts from an empty cache
 public struct TestScenario: Codable, Equatable, Sendable {
@@ -39,14 +41,18 @@ public struct TestScenario: Codable, Equatable, Sendable {
     public var removedItems: [String]
     /// Whether activating keeps the readings an earlier launch cached.
     public var keepsCache: Bool
+    /// Seconds a refresh waits before answering.
+    public var delay: TimeInterval
 
     public init(failure: Failure = .none, isEmpty: Bool = false,
-                age: TimeInterval = 0, removedItems: [String] = [], keepsCache: Bool = false) {
+                age: TimeInterval = 0, removedItems: [String] = [], keepsCache: Bool = false,
+                delay: TimeInterval = 0) {
         self.failure = failure
         self.isEmpty = isEmpty
         self.age = age
         self.removedItems = removedItems
         self.keepsCache = keepsCache
+        self.delay = delay
     }
 
     /// `nil` for an empty or unknown spec, so a typo never runs a test
@@ -74,6 +80,9 @@ public struct TestScenario: Codable, Equatable, Sendable {
                 } else {
                     scenario.age = 3 * 3600
                 }
+            case "slow":
+                guard let argument, let seconds = Double(argument), seconds >= 0 else { return nil }
+                scenario.delay = seconds
             case "keep-cache" where argument == nil:
                 scenario.keepsCache = true
             case "item-removed":

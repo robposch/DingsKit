@@ -182,6 +182,7 @@ public struct ReadingsRefresher: Sendable {
     /// fixture does not load takes no part, so only a scenario's own
     /// failures show up as failures.
     private func refreshScenario(_ scenario: TestScenario) async throws -> ReadingsResult {
+        if scenario.delay > 0 { try await Task.sleep(for: .seconds(scenario.delay)) }
         var available: [(Provider, [DeviceReadings])] = []
         let fixtures: [(Provider, @Sendable () throws -> any ProviderClient)] = demoClients
             + ProviderSpec.all.map { spec in

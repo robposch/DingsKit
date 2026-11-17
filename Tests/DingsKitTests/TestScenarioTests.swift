@@ -67,6 +67,13 @@ extension GlobalConfig {
             #expect(TestScenario(spec: "stale:-5") == nil)
         }
 
+        @Test func slowTakesSecondsAndRejectsBadValues() {
+            #expect(TestScenario(spec: "slow:4") == TestScenario(delay: 4))
+            #expect(TestScenario(spec: "slow") == nil)
+            #expect(TestScenario(spec: "slow:-1") == nil)
+            #expect(TestScenario(spec: "slow:later") == nil)
+        }
+
         @Test func combinesPresetsWithPlus() {
             #expect(TestScenario(spec: "partial-failure+stale:10")
                     == TestScenario(failure: .first, age: 600))
@@ -89,6 +96,14 @@ extension GlobalConfig {
             #expect(!result.outcomes.contains { !$0.succeeded })
             #expect(result.outcomes.map(\.provider) == [first, second])
             #expect(cache.saved?.isDemo == false)
+        }
+
+        /// `slow` holds the answer back, so a UI test can see the loading state.
+        @Test func slowAnswersAfterItsDelay() async throws {
+            let start = Date()
+            let result = try await refresher(TestScenario(delay: 0.3)).refresh()
+            #expect(Date().timeIntervalSince(start) >= 0.3)
+            #expect(result.devices.map(\.serialNumber) == ["f1", "f2", "s1"])
         }
 
         @Test func partialFailureFailsTheFirstProviderOnly() async throws {

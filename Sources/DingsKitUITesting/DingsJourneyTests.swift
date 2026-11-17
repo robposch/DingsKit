@@ -119,6 +119,17 @@ open class DingsJourneyTests: XCTestCase {
         XCTAssertTrue(scroll(to: age, in: app), "The readings do not say they are 3 hours old")
     }
 
+    /// A slow first load says it is loading, then shows the readings.
+    public func testASlowFirstLoadSaysItIsLoading() throws {
+        let profile = try requireProfile()
+        let app = launch(DingsLaunch.scenario("slow:6"))
+        XCTAssertTrue(element(beginningWith: "Loading", in: app).waitForExistence(timeout: 5),
+                      "A slow first load shows no loading state")
+        XCTAssertTrue(element(beginningWith: profile.demoItemTitle, in: app).waitForExistence(timeout: 20),
+                      "The readings never arrive after loading")
+        XCTAssertFalse(element(beginningWith: "Loading", in: app).exists, "Loading stays after the readings arrived")
+    }
+
     /// With readings cached, a refresh that fails, on opening or by pulling,
     /// keeps them on screen and says so, rather than an error screen.
     public func testAFailedRefreshKeepsTheReadings() throws {
