@@ -19,5 +19,11 @@ let package = Package(
         .target(name: "DingsKitTestSupport", dependencies: ["DingsKit"]),
         .target(name: "DingsKitUITesting"),
         .testTarget(name: "DingsKitTests", dependencies: ["DingsKit", "DingsKitTestSupport"]),
+        // Reference images of the shared screens. Rendered on the iOS
+        // simulator (`xcodebuild test -scheme DingsKit-Package`); compiles
+        // to nothing on other platforms.
+        .testTarget(name: "DingsKitUISnapshotTests",
+                    dependencies: ["DingsKit", "DingsKitUI", "DingsKitTestSupport"],
+                    exclude: ["References"]),
     ]
 )

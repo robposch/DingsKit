@@ -8,7 +8,8 @@ public enum TestDings {
         sensors: [SensorDescriptor] = [],
         appGroupSuite: String = "group.dingskit.tests",
         legacyDecodeProvider: Provider? = nil,
-        keychainSyncedProviders: Set<Provider> = []
+        keychainSyncedProviders: Set<Provider> = [],
+        disclosure: DisclosureContent = DisclosureContent(disclaimer: "", severity: .info)
     ) {
         var config = DingsConfig(
             appGroupSuite: appGroupSuite,
@@ -18,7 +19,8 @@ public enum TestDings {
             backgroundTaskID: "dingskit.tests.refresh",
             providers: providers,
             sensors: sensors,
-            legacyDecodeProvider: legacyDecodeProvider)
+            legacyDecodeProvider: legacyDecodeProvider,
+            disclosure: disclosure)
         config.keychainSyncedProviders = keychainSyncedProviders
         Dings._resetForTesting(config)
     }
