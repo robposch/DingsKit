@@ -2,11 +2,11 @@ import SwiftUI
 import AppIntents
 import DingsKit
 
-/// Interactive tap-to-refresh (iOS 17) for a Home Screen / StandBy widget's
-/// header row. The tap runs the shared `RefreshReadingsIntent` in the
-/// background and reloads the widget: an on-demand refresh that does not wait
-/// on WidgetKit's background reload budget. Both apps place this in the same
-/// header position, ahead of the hero reading.
+/// Interactive tap-to-refresh (iOS 17) for a Home Screen / StandBy widget,
+/// placed in its header row or at the end of its freshness footer. The tap
+/// runs the shared `RefreshReadingsIntent` in the background and reloads the
+/// widget: an on-demand refresh that does not wait on WidgetKit's background
+/// reload budget.
 @available(visionOS 26, *) // runs `RefreshReadingsIntent`
 public struct RefreshButton: View {
     public init() {}
