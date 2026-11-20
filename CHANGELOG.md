@@ -19,6 +19,13 @@
   provider has a key. An unreadable keychain (before the first unlock) does not
   count as lost.
 
+### DingsKitUI
+
+- `FreshnessLine` in `.compact` density shows the age in one whole unit
+  ("12 minutes", "5 hours") on iOS 18 and later, without seconds, so it fits
+  beside a button on the smallest widgets. iOS 17 keeps the two-unit style.
+- `Freshness.ageStyle(since:)`: that format, for other widget stamps.
+
 ## 0.3.0 - Apple Watch sync
 
 The plumbing an Apple Watch app needs to fetch readings on its own. No raw

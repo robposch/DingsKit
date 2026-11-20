@@ -9,7 +9,8 @@ public enum FreshnessDensity: Sendable {
     /// `FreshnessLine.init`) since the default follows the widget case, not
     /// the app-screen one.
     case full
-    /// Glyph plus a relative time. Every Home Screen widget in both apps.
+    /// Glyph plus an age in one whole unit ("12 minutes"; two units with
+    /// seconds on iOS 17). Every Home Screen widget in both apps.
     case compact
     /// Glyph plus a short age ("3m"), for accessory (Lock Screen) families.
     /// No app has adopted it yet: LuftDings' accessory views keep their own
@@ -17,6 +18,19 @@ public enum FreshnessDensity: Sendable {
     /// change that wording. `ticking` has no effect on this density (see
     /// below).
     case minimal
+}
+
+extension Freshness {
+    /// The widget age: whole units, one of them, never seconds ("12 minutes",
+    /// "5 hours", "2 days"). SwiftUI's `.relative` style always shows two
+    /// units ("12 min, 34 sec"), wider and more precise than a reading's age
+    /// warrants. No "ago": the glyph beside it already says what the time is.
+    /// As `Text(date, format:)` it still counts up between timeline reloads at
+    /// no reload cost. Rounds down, so a stamp never reads fresher than it is.
+    @available(iOS 18.0, macOS 15.0, watchOS 11.0, visionOS 2.0, *)
+    public static func ageStyle(since date: Date) -> SystemFormatStyle.DateOffset {
+        .offset(to: date, allowedFields: [.day, .hour, .minute], maxFieldCount: 1, sign: .never)
+    }
 }
 
 /// Whether the parts share one line or stack.
@@ -98,6 +112,18 @@ public struct FreshnessLine: View {
         "\(p.kind.label) \(p.date.formatted(.relative(presentation: .named)))"
     }
 
+    /// One whole unit on iOS 18 and later (`Freshness.ageStyle`). iOS 17 has
+    /// no self-updating format with a unit limit, so it keeps the two-unit
+    /// `.relative` style; callers let the line shrink to fit.
+    @ViewBuilder
+    private func tickingAge(_ date: Date) -> some View {
+        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, visionOS 2.0, *) {
+            Text(.currentDate, format: Freshness.ageStyle(since: date))
+        } else {
+            Text(date, style: .relative)
+        }
+    }
+
     @ViewBuilder
     private func part(_ p: (kind: Freshness.Kind, date: Date)) -> some View {
         switch density {
@@ -124,7 +150,7 @@ public struct FreshnessLine: View {
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 glyph(p.kind)
                 if ticking {
-                    Text(p.date, style: .relative)
+                    tickingAge(p.date)
                 } else {
                     Text(p.date, format: .relative(presentation: .named))
                 }
