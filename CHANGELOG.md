@@ -25,6 +25,8 @@
   ("12 minutes", "5 hours") on iOS 18 and later, without seconds, so it fits
   beside a button on the smallest widgets. iOS 17 keeps the two-unit style.
 - `Freshness.ageStyle(since:)`: that format, for other widget stamps.
+- `Freshness.ageAnchor(_:now:)`: the time an age counts from; a future time
+  (a device clock running ahead) anchors at now instead of counting as age.
 
 ## 0.3.0 - Apple Watch sync
 

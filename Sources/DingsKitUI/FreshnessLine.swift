@@ -25,11 +25,19 @@ extension Freshness {
     /// "5 hours", "2 days"). SwiftUI's `.relative` style always shows two
     /// units ("12 min, 34 sec"), wider and more precise than a reading's age
     /// warrants. No "ago": the glyph beside it already says what the time is.
-    /// As `Text(date, format:)` it still counts up between timeline reloads at
-    /// no reload cost. Rounds down, so a stamp never reads fresher than it is.
+    /// Render it live, as `Text(.currentDate, format: Freshness.ageStyle(since:
+    /// date))`, and it counts up between timeline reloads at no reload cost;
+    /// `Text(date, format:)` would be static. Rounds down, so a stamp never
+    /// reads fresher than it is.
     @available(iOS 18.0, macOS 15.0, watchOS 11.0, visionOS 2.0, *)
     public static func ageStyle(since date: Date) -> SystemFormatStyle.DateOffset {
         .offset(to: date, allowedFields: [.day, .hour, .minute], maxFieldCount: 1, sign: .never)
+    }
+
+    /// The time an age counts from. A future time (a device clock running
+    /// ahead) anchors at `now`, so it reads as fresh rather than as time passed.
+    public static func ageAnchor(_ date: Date, now: Date = Date()) -> Date {
+        min(date, now)
     }
 }
 
@@ -118,7 +126,7 @@ public struct FreshnessLine: View {
     @ViewBuilder
     private func tickingAge(_ date: Date) -> some View {
         if #available(iOS 18.0, macOS 15.0, watchOS 11.0, visionOS 2.0, *) {
-            Text(.currentDate, format: Freshness.ageStyle(since: date))
+            Text(.currentDate, format: Freshness.ageStyle(since: Freshness.ageAnchor(date)))
         } else {
             Text(date, style: .relative)
         }

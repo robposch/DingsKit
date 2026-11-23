@@ -53,4 +53,12 @@ import DingsKitUI
         #expect(!text.contains("30"))
         #expect(!text.lowercased().contains("sec"))
     }
+
+    /// A device clock running ahead gives a measurement time in the future.
+    /// The age must not count it as time passed: it anchors at "now".
+    @Test func aFutureTimeAnchorsAtNow() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        #expect(Freshness.ageAnchor(now.addingTimeInterval(300), now: now) == now)
+        #expect(Freshness.ageAnchor(now.addingTimeInterval(-300), now: now) == now.addingTimeInterval(-300))
+    }
 }
