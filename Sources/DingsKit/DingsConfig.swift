@@ -119,6 +119,10 @@ public struct RefreshPolicyValues: Sendable {
     public var foregroundDedupe: TimeInterval = 30
     public var staleCueAfter: TimeInterval = 60 * 60
     public var deviceStaleCueAfter: TimeInterval = 3 * 60 * 60
+    /// A longer unattended floor for single providers, such as one whose API
+    /// caps calls per device per day. Empty by default: every provider uses
+    /// `interval`. See `RefreshPolicy.interval(for:)`.
+    public var providerIntervals: [Provider: TimeInterval] = [:]
     public init() {}
 }
 

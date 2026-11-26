@@ -118,7 +118,11 @@ writes the snapshot when a cache is passed and returns a `ReadingsResult`
 for the run log). Init parameters: `connections`, `cache`, `transport`,
 `dataModeStore` (when it reads `.demo`, no network is touched),
 `clientOverrides` (bespoke clients that bypass the registry), `demoClients`,
-and `demoTransport`. The refresher never imports WidgetKit; the caller invokes
+and `demoTransport`. `refresh(.unattended)` (periodic tick, widget timeline,
+background task) skips a provider listed in
+`RefreshPolicyValues.providerIntervals` while its last fetch is younger than
+`RefreshPolicy.interval(for:)`; `refresh()` (`.onDemand`) fetches every
+provider. The refresher never imports WidgetKit; the caller invokes
 `WidgetCenter.shared.reloadAllTimelines()` afterward. `RefreshReadingsIntent`
 is the shared iOS 17 tap-to-refresh `AppIntent` for widgets: it runs the same
 refresh, writes the cache, and reloads timelines; configure it through
@@ -126,7 +130,7 @@ refresh, writes the cache, and reloads timelines; configure it through
 
 **Refresh policy.** `RefreshPolicy` exposes the timing floors from
 `Dings.config.refresh` (`RefreshPolicyValues`): `interval` (unattended poll
-floor), `widgetReloadInterval`, `foregroundDedupe` (user-initiated gap),
+floor; `interval(for:)` with `providerIntervals` for a slower provider), `widgetReloadInterval`, `foregroundDedupe` (user-initiated gap),
 `staleCueAfter`, `deviceStaleCueAfter`. `RefreshPolicy.shouldRefresh(since:
 now:minInterval:)` answers whether a fetch is due.
 

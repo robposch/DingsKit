@@ -25,6 +25,21 @@ import FoundationNetworking
 /// and the CLI.
 public struct ReadingsRefresher: Sendable {
 
+    /// Who asked for a refresh, which decides whether per-provider floors
+    /// apply.
+    public enum Trigger: Sendable, Equatable {
+        /// The user asked (opening the app, pull-to-refresh, the widget's
+        /// refresh button) or the connections changed: every configured
+        /// provider is fetched.
+        case onDemand
+        /// A periodic tick, a widget timeline or a background task: a provider
+        /// with its own floor (`RefreshPolicyValues.providerIntervals`) is
+        /// left out while its last successful fetch is younger than
+        /// `RefreshPolicy.interval(for:)`. Its devices and fetch stamp carry
+        /// over, and its outcome is marked `notDue`.
+        case unattended
+    }
+
     private let connections: ConnectionsStore
     private let cache: (any ReadingsCache)?
     private let transport: Transport
@@ -108,16 +123,21 @@ public struct ReadingsRefresher: Sendable {
     /// - Throws: `DingsError.missingCredentials` when no provider is
     ///           configured. When *all* configured providers fail, the first
     ///           provider's error propagates (in configuration order).
+    /// - Parameter trigger: `.unattended` lets providers with their own,
+    ///           longer floor sit out a run (see `Trigger`). Demo mode and
+    ///           test scenarios touch no network and ignore it. When every
+    ///           configured provider sits out, nothing is fetched or written
+    ///           and the cached readings come back.
     /// - Returns: The merged `ReadingsResult`, with a per-provider outcome list.
     @discardableResult
-    public func refresh() async throws -> ReadingsResult {
+    public func refresh(_ trigger: Trigger = .onDemand) async throws -> ReadingsResult {
         if let testScenario {
             return try await refreshScenario(testScenario)
         }
         if (dataModeStore?.load() ?? .live) == .demo {
             return try await refreshDemo()
         }
-        return try await refreshLive()
+        return try await refreshLive(trigger)
     }
 
     /// Demo mode: built-in demo data, no credentials, no network.
@@ -162,19 +182,32 @@ public struct ReadingsRefresher: Sendable {
     }
 
     /// Live mode: every configured provider, fail-soft per provider.
-    private func refreshLive() async throws -> ReadingsResult {
+    private func refreshLive(_ trigger: Trigger) async throws -> ReadingsResult {
         let providers = connections.configuredProviders()
         guard !providers.isEmpty else {
             throw DingsError.missingCredentials(coreLocalized("No saved credentials."))
         }
+        let now = Date()
+        let previous = trigger == .unattended ? cache?.load().flatMap { $0.isDemo ? nil : $0 } : nil
         let sources = providers.map { provider in
-            Source(provider: provider) {
+            Source(provider: provider, notDue: Self.isNotDue(provider, previous: previous, now: now)) {
                 let client = try makeClient(for: provider)
                 let devices = try await client.fetchAllReadings()
                 return (devices, (client as? RateLimitReporting)?.rateLimitRemaining)
             }
         }
-        return try await mergeRefresh(sources, now: Date())
+        return try await mergeRefresh(sources, now: now)
+    }
+
+    /// A provider with its own floor whose last successful fetch is younger
+    /// than that floor. Only its own fetch stamp counts: without one (never
+    /// fetched, or a snapshot from before per-provider stamps) it is due, and
+    /// so is a stamp in the future (a clock that ran ahead must not hold the
+    /// provider back).
+    private static func isNotDue(_ provider: Provider, previous: CachedReadings?, now: Date) -> Bool {
+        guard RefreshPolicy.hasOwnInterval(provider),
+              let stamp = previous?.providerFetchedAt[provider], stamp <= now else { return false }
+        return now.timeIntervalSince(stamp) < RefreshPolicy.interval(for: provider)
     }
 
     /// A UI-test scenario: the demo data, changed the way the scenario says,
@@ -210,6 +243,8 @@ public struct ReadingsRefresher: Sendable {
     /// reports one, its remaining rate limit.
     private struct Source {
         let provider: Provider
+        /// Sits out this run (see `Trigger.unattended`); `fetch` is not called.
+        var notDue = false
         let fetch: () async throws -> ([DeviceReadings], Int?)
     }
 
@@ -231,6 +266,14 @@ public struct ReadingsRefresher: Sendable {
 
         for source in sources {
             let provider = source.provider
+            if source.notDue {
+                let kept = previous?.devices.filter { $0.provider == provider } ?? []
+                devicesByProvider[provider] = kept
+                providerFetchedAt[provider] = previous?.providerFetchedAt[provider]
+                outcomes.append(ProviderRefreshOutcome(provider: provider, succeeded: true, message: nil, notDue: true))
+                Log.client.info("refresh (\(provider.rawValue)): not due (own floor \(Int(RefreshPolicy.interval(for: provider)))s)")
+                continue
+            }
             do {
                 let (fetched, remaining) = try await source.fetch()
                 if let remaining {
@@ -253,10 +296,14 @@ public struct ReadingsRefresher: Sendable {
             }
         }
 
-        guard outcomes.contains(where: \.succeeded) else {
-            // All configured providers failed — surface the first error and
-            // leave the existing cache untouched.
-            throw firstError ?? DingsError.network(coreLocalized("All providers failed."))
+        let fetchedSome = outcomes.contains { $0.succeeded && !$0.notDue }
+        if !fetchedSome, let firstError {
+            // Every provider that was fetched failed — surface the first error
+            // and leave the existing cache untouched.
+            throw firstError
+        }
+        guard fetchedSome || outcomes.contains(where: \.notDue) else {
+            throw DingsError.network(coreLocalized("All providers failed."))
         }
 
         let devices = providers.flatMap { devicesByProvider[$0] ?? [] }
@@ -266,7 +313,9 @@ public struct ReadingsRefresher: Sendable {
             outcomes: outcomes,
             providerFetchedAt: providerFetchedAt
         )
-        try saveSnapshot(result, isDemo: false, fetchedAt: now)
+        // Nothing fetched (every provider sat out): the cache already holds
+        // exactly this, and its fetch time must not move.
+        if fetchedSome { try saveSnapshot(result, isDemo: false, fetchedAt: now) }
         return result
     }
 

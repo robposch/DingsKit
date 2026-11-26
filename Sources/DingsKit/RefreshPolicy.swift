@@ -17,6 +17,24 @@ public enum RefreshPolicy {
     /// refresh. Defaults to 10 minutes.
     public static var interval: TimeInterval { Dings.config.refresh.interval }
 
+    /// The unattended floor for one provider: its entry in
+    /// `RefreshPolicyValues.providerIntervals`, never shorter than `interval`
+    /// (unattended runs are already spaced by `interval`, so a shorter value
+    /// could not take effect). Providers without an entry use `interval`.
+    ///
+    /// `ReadingsRefresher.refresh(.unattended)` leaves a provider with an
+    /// entry out of a run while its last successful fetch is younger than
+    /// this; on-demand refreshes (opening the app, pull-to-refresh, the
+    /// widget's refresh button) always fetch it.
+    public static func interval(for provider: Provider) -> TimeInterval {
+        max(interval, Dings.config.refresh.providerIntervals[provider] ?? interval)
+    }
+
+    /// Whether `provider` declares its own unattended floor.
+    static func hasOwnInterval(_ provider: Provider) -> Bool {
+        Dings.config.refresh.providerIntervals[provider] != nil
+    }
+
     /// How far out the widget asks WidgetKit to reload its timeline. A little
     /// longer than `interval` to stay within WidgetKit's ~40–70 reloads/day
     /// budget; the app stays the primary fetcher and reloads the widget directly

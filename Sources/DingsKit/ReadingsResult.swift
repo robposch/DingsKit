@@ -28,9 +28,9 @@ public struct ReadingsResult: Sendable {
     /// worth saying — no outcomes, or a single provider that just succeeded.
     public var outcomeSummary: String? {
         guard !outcomes.isEmpty else { return nil }
-        if outcomes.count == 1, outcomes[0].succeeded { return nil }
+        if outcomes.count == 1, outcomes[0].succeeded, !outcomes[0].notDue { return nil }
         return outcomes.map { outcome in
-            let mark = outcome.succeeded ? "✓" : "✗"
+            let mark = outcome.notDue ? "–" : outcome.succeeded ? "✓" : "✗"
             let suffix = outcome.succeeded ? "" : outcome.message.map { " \($0)" } ?? ""
             return "\(outcome.provider.displayName) \(mark)\(suffix)"
         }.joined(separator: " · ")
@@ -43,11 +43,17 @@ public struct ProviderRefreshOutcome: Equatable, Sendable {
     public let succeeded: Bool
     /// Failure detail (the error's user message); `nil` on success.
     public let message: String?
+    /// Not fetched in this unattended run because its own floor
+    /// (`RefreshPolicy.interval(for:)`) has not passed; its previous devices
+    /// and fetch stamp were kept. Counts as succeeded: nothing failed.
+    /// Shown as "–" in `ReadingsResult.outcomeSummary`.
+    public let notDue: Bool
 
-    public init(provider: Provider, succeeded: Bool, message: String?) {
+    public init(provider: Provider, succeeded: Bool, message: String?, notDue: Bool = false) {
         self.provider = provider
         self.succeeded = succeeded
         self.message = message
+        self.notDue = notDue
     }
 }
 

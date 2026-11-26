@@ -24,6 +24,16 @@
   entered value or names it as replaced), instead of overwriting the rotated
   token with the retired one. A bag from another connection is never kept.
   Empty by default, so every existing provider saves exactly what was entered.
+- `RefreshPolicyValues.providerIntervals` and `RefreshPolicy.interval(for:)`:
+  a longer unattended floor for single providers, for an API with a
+  per-device daily quota. Never shorter than `interval`. Empty by default.
+- `ReadingsRefresher.refresh(_:)` takes a `Trigger`. `.unattended` (periodic
+  tick, widget timeline, background task) leaves a provider with its own
+  floor out while its last fetch is younger than that floor, keeping its
+  devices and fetch stamp; when every provider sits out, nothing is fetched or
+  written. `.onDemand`, the default, fetches every provider as before.
+  `ProviderRefreshOutcome.notDue` marks a provider that sat out ("–" in
+  `outcomeSummary`). `TestDings.bootstrap` takes `refresh:`.
 - `ConnectionsStore.credentialsLost(given:)`: live readings are cached but no
   provider has a key. An unreadable keychain (before the first unlock) does not
   count as lost.
