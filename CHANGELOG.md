@@ -34,6 +34,10 @@
   written. `.onDemand`, the default, fetches every provider as before.
   `ProviderRefreshOutcome.notDue` marks a provider that sat out ("–" in
   `outcomeSummary`). `TestDings.bootstrap` takes `refresh:`.
+- `TimeoutDeadline.current` / `.remaining`: the deadline of the innermost
+  `withTimeout` the task runs under (the earliest of nested ones), visible to
+  the operation and to tasks it starts, so work that must not be cut off
+  halfway can decide not to start or bound itself to the time left.
 - `ConnectionsStore.credentialsLost(given:)`: live readings are cached but no
   provider has a key. An unreadable keychain (before the first unlock) does not
   count as lost.

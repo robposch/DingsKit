@@ -149,7 +149,8 @@ the demo-mode transport: a table of `HostRoutes` → `Route` (`Match`, deferred
 `body`, `headers`), injected by the app because fixtures are provider-specific.
 Build URLs with `makeURL(_:)`, which throws instead of force-unwrapping.
 `withTimeout(seconds:operation:)` throws `TimeoutError` so a hung fetch never
-overruns the background budget.
+overruns the background budget. `TimeoutDeadline.current` tells the operation how
+much of that budget is left.
 
 **Errors.** `DingsError` (`.storage`, `.cache`, `.timeout`,
 `.missingCredentials`, `.network`) is thrown by the shared infrastructure.

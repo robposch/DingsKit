@@ -7,6 +7,20 @@ public struct TimeoutError: Error, Sendable, Equatable {
     public init() {}
 }
 
+/// The deadline of the innermost `withTimeout` the current task runs under,
+/// so an operation can tell how much time its caller has left. Work that must
+/// not be cut off halfway (a token exchange whose answer carries a new
+/// single-use token) can then decide not to start, or bound itself to the
+/// time that is left, instead of running past the caller's budget.
+public enum TimeoutDeadline {
+    @TaskLocal public static var current: Date?
+
+    /// Seconds until `current`, never negative; `nil` outside any timeout.
+    public static var remaining: TimeInterval? {
+        current.map { max(0, $0.timeIntervalSinceNow) }
+    }
+}
+
 /// Runs `operation`, throwing `TimeoutError` if it doesn't finish within
 /// `seconds`. Used to bound the background-refresh fetch well under iOS's ~30s
 /// background budget: a hung network call that overruns the budget gets the task
@@ -15,6 +29,9 @@ public struct TimeoutError: Error, Sendable, Equatable {
 ///
 /// The loser task is cancelled, so a cooperating `operation` (e.g. `URLSession`)
 /// stops promptly rather than running to completion in the background.
+///
+/// While it runs, `TimeoutDeadline.current` holds the earlier of this
+/// deadline and any outer one.
 ///
 /// A zero, negative or NaN `seconds` times out immediately without running
 /// `operation`; an infinite one, or one beyond about 292 years (`Int64.max`
@@ -31,7 +48,17 @@ public func withTimeout<T: Sendable>(
     // nanoseconds overflows and returns at once. `Double(Int64.max)` rounds up
     // to 2^63, so anything strictly below it converts without trapping.
     guard nanoseconds < Double(Int64.max) else { return try await operation() }
-    return try await withThrowingTaskGroup(of: T.self) { group in
+    let deadline = Date().addingTimeInterval(seconds)
+    let effective = TimeoutDeadline.current.map { min($0, deadline) } ?? deadline
+    return try await TimeoutDeadline.$current.withValue(effective) {
+        try await race(operation, againstNanoseconds: nanoseconds)
+    }
+}
+
+private func race<T: Sendable>(
+    _ operation: @escaping @Sendable () async throws -> T, againstNanoseconds nanoseconds: Double
+) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
         group.addTask { try await operation() }
         group.addTask {
             try await Task.sleep(nanoseconds: UInt64(nanoseconds))
