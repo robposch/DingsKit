@@ -54,7 +54,10 @@ constants via `extension Provider { static let x = Provider("x") }`. A
 `id`, `label`, `placeholder`, `isSecure`), `instructionSteps`,
 `instructionsURL`, `instructionsLinkTitle`, and a `makeClient` factory
 `(ProviderCredentials, Transport) -> any ProviderClient`. Optional extras:
-`demoCredentials` (the bag handed to `makeClient` in demo mode) and five copy
+`demoCredentials` (the bag handed to `makeClient` in demo mode),
+`rotatingCredentials` (`[CredentialRotation]`: fields the client rewrites
+itself, like a rotating refresh token, so the setup form keeps the client's
+renewed bag instead of saving the retired value over it) and five copy
 overrides for the setup form (`setupIntro`, `credentialsHeader`,
 `credentialsFooter`, `credentialsSourceHeader`, `credentialsSourceFooter`) for
 providers whose credential is a login rather than a pasted key. Registered

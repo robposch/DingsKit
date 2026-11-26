@@ -15,6 +15,15 @@
   iCloud Keychain, add first and delete second.
 - `KeychainSupport.scoped(_:synchronizable:for:)` and
   `KeychainSupport.moveToSynchronizable(_:)`: the same for an app's own stores.
+- `ProviderSpec.rotatingCredentials` (`[CredentialRotation]`): credential
+  fields the provider's client replaces on its own, such as an OAuth refresh
+  token the vendor retires on use, with the bag key where the client records
+  the value it replaced. When set, `ProviderConnectionModel.validateAndSave`
+  keeps the stored bag after a successful validation if it continues the
+  entered credentials (same non-rotating fields; each rotating field holds the
+  entered value or names it as replaced), instead of overwriting the rotated
+  token with the retired one. A bag from another connection is never kept.
+  Empty by default, so every existing provider saves exactly what was entered.
 - `ConnectionsStore.credentialsLost(given:)`: live readings are cached but no
   provider has a key. An unreadable keychain (before the first unlock) does not
   count as lost.

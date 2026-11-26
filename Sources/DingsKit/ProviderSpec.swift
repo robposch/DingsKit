@@ -17,6 +17,31 @@ public struct CredentialFieldSpec: Sendable, Equatable, Identifiable {
     }
 }
 
+/// A credential the provider's client replaces on its own, such as an OAuth
+/// refresh token that the vendor rotates on every use. The client saves the
+/// new value to the provider's store and records the value it replaced under
+/// `previousValueKey`, so a stored bag can be traced back to the value the
+/// user entered.
+///
+/// Declaring one changes what the setup form saves after a successful
+/// validation (see `ProviderConnectionModel.validateAndSave(_:)`): when the
+/// validation fetch rotated the entered value, the stored bag that continues
+/// it is kept instead of being overwritten with the entered, now retired
+/// value.
+public struct CredentialRotation: Sendable, Equatable {
+    /// The `CredentialFieldSpec.id` of the rotating form field.
+    public let fieldID: String
+    /// The bag key under which the client stores the value it replaced. Not a
+    /// form field. Required: without it a rotated bag cannot be told apart
+    /// from one another connection rotated.
+    public let previousValueKey: String
+
+    public init(fieldID: String, previousValueKey: String) {
+        self.fieldID = fieldID
+        self.previousValueKey = previousValueKey
+    }
+}
+
 /// Everything the app needs to offer a registry-driven provider: row copy for
 /// the chooser, credential fields for the generic setup form, key-creation
 /// steps, and a client factory for the refresh pipeline. Adding a provider =
@@ -46,6 +71,10 @@ public struct ProviderSpec: Sendable, Identifiable {
     /// otherwise hit a side-effecting path (e.g. a provider's token refresh
     /// persists to the keychain, so its demo bag carries a pre-cached token).
     public let demoCredentials: ProviderCredentials
+    /// Credential fields the client rewrites itself (a rotating refresh
+    /// token). Empty for most providers, and then the setup form saves
+    /// exactly what was entered.
+    public let rotatingCredentials: [CredentialRotation]
 
     /// Continuation of the sentence "`{appName}` ..." on the setup form,
     /// naming what is read and what kind of credential this is (e.g. "reads
@@ -87,6 +116,7 @@ public struct ProviderSpec: Sendable, Identifiable {
         instructionsLinkTitle: String,
         makeClient: @escaping @Sendable (ProviderCredentials, Transport) -> any ProviderClient,
         demoCredentials: ProviderCredentials = ProviderCredentials(fields: [:]),
+        rotatingCredentials: [CredentialRotation] = [],
         setupIntro: String? = nil,
         credentialsHeader: String = coreLocalized("Paste your credentials"),
         credentialsFooter: String = coreLocalized("First time? Follow the steps below to create them."),
@@ -103,6 +133,7 @@ public struct ProviderSpec: Sendable, Identifiable {
         self.instructionsLinkTitle = instructionsLinkTitle
         self.makeClient = makeClient
         self.demoCredentials = demoCredentials
+        self.rotatingCredentials = rotatingCredentials
         self.setupIntro = setupIntro
             ?? coreLocalized("reads your devices using your own free \(displayName) API credentials. You create them once in your \(displayName) account.")
         self.credentialsHeader = credentialsHeader

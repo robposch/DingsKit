@@ -86,8 +86,9 @@ public final class ProviderConnectionModel: Identifiable {
         Log.credentials.info("connection (\(self.provider.rawValue)): validating (\(fields.count) field(s))")
         do {
             let deviceCount = try await validator.validate(provider: provider, credentials: creds)
-            try connections.saveCredentials(creds, for: provider)
-            state = .connected(maskedID: Self.mask(maskSource(of: creds)))
+            let saved = credentialsToSave(entered: creds)
+            try connections.saveCredentials(saved, for: provider)
+            state = .connected(maskedID: Self.mask(maskSource(of: saved)))
             Log.credentials.info("connection (\(self.provider.rawValue)): validated & saved — \(deviceCount) device(s)")
             onConnected()
         } catch let error as ProviderAPIError {
@@ -105,6 +106,62 @@ public final class ProviderConnectionModel: Identifiable {
         } catch {
             state = .invalid(coreLocalized("Unexpected error: \(error.localizedDescription)"))
             Log.credentials.error("connection (\(self.provider.rawValue)): error — \(error.localizedDescription)")
+        }
+    }
+
+    /// What to save after a successful validation: the entered credentials,
+    /// unless the provider declares rotating fields and the stored bag
+    /// continues the entered one.
+    ///
+    /// Validating runs the provider's client once. A client with a rotating
+    /// credential (an OAuth refresh token the vendor retires on use) may
+    /// rotate it during that fetch and save the new value, plus whatever it
+    /// caches (an access token), to the store itself. Saving the entered bag
+    /// over that would bring back the retired value, and the next refresh
+    /// would fail.
+    ///
+    /// The stored bag is kept only when it equals the entered one on every
+    /// non-rotating form field, and each rotating field either still holds
+    /// the entered value or names it as the value it replaced. That ties the
+    /// bag to the entered token line; a bag from another connection (an older
+    /// one the user is replacing, rotated meanwhile by a background refresh)
+    /// fails the check even with the same client ID and secret. Whether the
+    /// bag changed during validation does not matter: a stored bag that
+    /// already continued the entered value (the user re-entered a token this
+    /// app had rotated) must be kept for the same reason.
+    ///
+    /// The kept bag is still saved, so a store that reacts to saves sees the
+    /// final credentials. An unreadable store falls back to the entered
+    /// credentials, as before rotations existed.
+    private func credentialsToSave(entered: ProviderCredentials) -> ProviderCredentials {
+        let rotations = spec.rotatingCredentials
+        guard !rotations.isEmpty else { return entered }
+        let stored: ProviderCredentials?
+        do {
+            stored = try connections.loadCredentials(provider)
+        } catch {
+            Log.credentials.error("connection (\(self.provider.rawValue)): stored credentials unreadable after validation; saving the entered ones")
+            return entered
+        }
+        guard let stored, Self.continues(stored, entered, spec: spec) else { return entered }
+        if stored != entered {
+            Log.credentials.info("connection (\(self.provider.rawValue)): keeping the credentials the client renewed during validation")
+        }
+        return stored
+    }
+
+    /// Whether `stored` is the same connection as `entered`, possibly with
+    /// its rotating fields renewed since.
+    static func continues(_ stored: ProviderCredentials, _ entered: ProviderCredentials, spec: ProviderSpec) -> Bool {
+        let rotatingIDs = Set(spec.rotatingCredentials.map(\.fieldID))
+        let fixedMatch = spec.fields
+            .filter { !rotatingIDs.contains($0.id) }
+            .allSatisfy { stored[$0.id] == entered[$0.id] }
+        guard fixedMatch else { return false }
+        return spec.rotatingCredentials.allSatisfy { rotation in
+            let value = entered[rotation.fieldID]
+            if stored[rotation.fieldID] == value { return true }
+            return !value.isEmpty && stored[rotation.previousValueKey] == value
         }
     }
 
